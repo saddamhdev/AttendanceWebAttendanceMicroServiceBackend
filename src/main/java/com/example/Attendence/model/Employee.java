@@ -3,6 +3,8 @@ package com.example.Attendence.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.util.List;
+
 public class Employee {
     private String id;
 
@@ -12,14 +14,14 @@ public class Employee {
     private String designation;
     private String email;
     private String  password;
-    private String type;
+    private List<String> type;
 
 
     private String status;private String endDate;private String position;private String currentTimee;
 
     public Employee() {}
 
-    public Employee(String idNumber, String name, String joinDate, String designation, String status, String endDate, String position, String currentTimee ,String email, String password, String type) {
+    public Employee(String idNumber, String name, String joinDate, String designation, String status, String endDate, String position, String currentTimee ,String email, String password, List<String> type) {
         this.idNumber = idNumber;
         this.name = name;
         this.joinDate = joinDate;
@@ -51,11 +53,11 @@ public class Employee {
         this.password = password;
     }
 
-    public String getType() {
+    public List<String> getType() {
         return type;
     }
 
-    public void setType(String type) {
+    public void setType(List<String> type) {
         this.type = type;
     }
 

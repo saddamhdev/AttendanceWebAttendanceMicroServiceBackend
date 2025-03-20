@@ -1090,7 +1090,7 @@ public class UserAtAGlanceService {
         return ResponseEntity.ok("Exported successfully");
     }
 
-    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1) {
+    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1,String header) {
       UserAtAGlance userAtAGlance=new UserAtAGlance();
       userAtAGlance.setEmployeeId(employeeId);
       userAtAGlance.setEmployeeName(employeeName);
@@ -1131,7 +1131,7 @@ public class UserAtAGlanceService {
         timeInSecond=0;
         timeInSecondOfOutTime=0;
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
-        employeeList=userService.employeeList();
+        employeeList=userService.employeeList(header);
 
         if (dataList.size() > 0) {
             System.out.println("UserAtAGlance");

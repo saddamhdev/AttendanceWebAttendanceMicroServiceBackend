@@ -16,7 +16,8 @@ public class GlobalSetting { // Renamed class
     private String earlyMinute;
     private String status;
 
-
+    public GlobalSetting() {
+    }
 
     // Parameterized constructor
     public GlobalSetting(String currentTime, String formattedBirthDate, String formattedDeathDate,

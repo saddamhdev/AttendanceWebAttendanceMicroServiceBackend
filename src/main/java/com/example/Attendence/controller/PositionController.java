@@ -4,6 +4,8 @@ import com.example.Attendence.model.LocalSetting;
 import com.example.Attendence.model.Position;
 import com.example.Attendence.repository.LocalSettingRepository;
 import com.example.Attendence.repository.PositionRepository;
+import com.example.Attendence.service.UserService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -20,7 +22,8 @@ import java.util.*;
 @CrossOrigin(origins = "http://localhost:3000")
 public class PositionController {
 
-
+@Autowired
+    UserService userService;
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
@@ -41,18 +44,9 @@ public class PositionController {
     }
 
     @PostMapping("/updateSortingPosition")
-    public ResponseEntity<String> updateSorting(@RequestBody Employee singleRowData) {
-        System.out.println(singleRowData.toString());
-        // Fetch employee list from another service
-        String userServiceUrl = "http://localhost:8080/api/user/getAll?status=1";  // Provide a valid status// Replace with actual URL
+    public ResponseEntity<String> updateSorting(@RequestBody Employee singleRowData, HttpServletRequest request) {
 
-        // Call the external API
-        ResponseEntity<Employee[]> response =
-                restTemplate.getForEntity(userServiceUrl, Employee[].class);
-
-        // Convert array to List
-
-        List<Employee> employeeList =Arrays.asList(response.getBody());
+        List<Employee> employeeList =userService.employeeList(request.getHeader("Authorization"));
         List<Employee> outresult=new ArrayList<>();
 
         // Process the list (e.g., update position)

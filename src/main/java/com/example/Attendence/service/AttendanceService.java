@@ -124,7 +124,7 @@ public class AttendanceService {
         return ResponseEntity.ok("Data exported successfully");
     }
 
-    public List<AttendanceDataForAnyPeriod> getAttendanceDataForAnyPeriod(String employeeId,String employeeName,String startDate1,String endDate1){
+    public List<AttendanceDataForAnyPeriod> getAttendanceDataForAnyPeriod(String employeeId,String employeeName,String startDate1,String endDate1,String header){
         DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Convert to ChronoLocalDate
@@ -134,7 +134,7 @@ public class AttendanceService {
         List<AttendanceDataForAnyPeriod> resultList=new ArrayList<>();
 
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
-        employeeList=userService.employeeList();
+        employeeList=userService.employeeList(header);
         if(dataList.size()>0)
         {
             employeeList.forEach(f->{

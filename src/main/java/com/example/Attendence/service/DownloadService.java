@@ -54,10 +54,10 @@ public class DownloadService {
     private AttendanceDataRepository attendanceDataRepository;
 
 
-    public List<AttendanceDataForFixedDay> getAllEmployeeAttendanceDataForFixedDay(String selectedDate){
+    public List<AttendanceDataForFixedDay> getAllEmployeeAttendanceDataForFixedDay(String selectedDate,String header){
         List <AttendanceDataForFixedDay> resultlist=new ArrayList<>();
         List<AttendanceData> dataList=attendanceDataRepository.findByEntryDateAndUpdateStatus(selectedDate,"1");
-        employeeList=userService.employeeList();
+        employeeList=userService.employeeList(header);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         employeeList.forEach(user->{
             dataList.forEach(data->{
@@ -212,10 +212,10 @@ public class DownloadService {
         return ResponseEntity.ok("Successfully Exported to: " + file.getAbsolutePath());
     }
 
-    public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1){
+    public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1,String header){
         List<AllEmployeeAttendanceData> resultList=new ArrayList<>();
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
-        employeeList=userService.employeeList();
+        employeeList=userService.employeeList(header);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Convert to ChronoLocalDate

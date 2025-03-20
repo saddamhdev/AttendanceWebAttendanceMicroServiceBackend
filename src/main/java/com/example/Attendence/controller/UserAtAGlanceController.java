@@ -6,6 +6,7 @@ import com.example.Attendence.model.Position;
 import com.example.Attendence.model.UserAtAGlance;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.service.UserAtAGlanceService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,7 +27,7 @@ public class UserAtAGlanceController {
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String employeeName,
             @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
+            @RequestParam(required = false) String endDate, HttpServletRequest request) {
 
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
         if(dataList.size()>0)
@@ -34,7 +35,7 @@ public class UserAtAGlanceController {
         else
             System.out.println("No");
 
-        return userAtAGlanceService.getUserAtAGlanceData(employeeId, employeeName, startDate, endDate);
+        return userAtAGlanceService.getUserAtAGlanceData(employeeId, employeeName, startDate, endDate,request.getHeader("Authorization"));
     }
 
     @PostMapping("/exportAtAGlanceData")

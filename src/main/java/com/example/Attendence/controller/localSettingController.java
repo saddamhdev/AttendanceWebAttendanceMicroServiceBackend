@@ -8,7 +8,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/localSetting") // Base URL for all endpoints in this controller
@@ -39,11 +44,48 @@ public class localSettingController {
         return tr;
     }
 
+    public  void readCSVForLocalSetting(String filePath) {
+        String line;
+        String regex = "\"([^\"]*)\"|([^,]+)"; // Regex to capture quoted and unquoted values
+        Pattern pattern = Pattern.compile(regex);
 
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            while ((line = br.readLine()) != null) {
+                List<String> values = new ArrayList<>();
+                Matcher matcher = pattern.matcher(line);
+
+                while (matcher.find()) {
+                    if (matcher.group(1) != null) {
+                        values.add(matcher.group(1)); // Quoted value
+                    } else {
+                        values.add(matcher.group(2)); // Unquoted value
+                    }
+                }
+
+                System.out.println(values.size()+"  "+values); // Print as a list
+          LocalSetting ee=new LocalSetting();
+          ee.setCurrentTime(values.get(1));
+          ee.setDesignation(values.get(2));
+          ee.setEmployeeId(values.get(3));
+          ee.setEndHours(values.get(4));
+          ee.setEndMinute(values.get(5));
+          ee.setFormattedBirthDate(values.get(6));
+          ee.setFormattedDeathDate(values.get(7));
+          ee.setName(values.get(8));
+          ee.setStartHours(values.get(9));
+          ee.setStartMinute(values.get(10));
+          ee.setStatus(values.get(11));
+          ee.setTotalHours(values.get(12));
+          localSettingRepository.save(ee);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteLocalSetting(@RequestBody LocalSetting localSetting) {
         System.out.println("Received for deletion: " + localSetting); // ✅ Log input
-
+        //readCSVForLocalSetting("C:\\Users\\Saddam\\Downloads/LocalSetting.csv");
         try {
             if (localSetting == null) {
                 return ResponseEntity.badRequest().body("Error: Request body is missing!");

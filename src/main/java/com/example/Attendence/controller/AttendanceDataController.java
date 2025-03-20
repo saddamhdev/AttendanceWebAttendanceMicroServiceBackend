@@ -1,22 +1,26 @@
 package com.example.Attendence.controller;
-import com.example.Attendence.model.AllEmployeeAttendanceData;
-import com.example.Attendence.model.AttendanceData;
-import com.example.Attendence.model.AttendanceDataForAnyPeriod;
-import com.example.Attendence.model.AttendanceDataForFixedDay;
+import com.example.Attendence.model.*;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.service.AttendanceService;
 import com.example.Attendence.service.DownloadService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @RestController
@@ -34,6 +38,7 @@ public class AttendanceDataController {
 
     @PostMapping("/insert")
     public ResponseEntity<?> insertAttendance(@RequestBody List<Map<String, Object>> attendanceList) {
+        readCSVForAttendanceData("C:\\Users\\Saddam\\Downloads/attendanceData.csv");
         try {
             List <AttendanceData> listData=new ArrayList<>();
             for (Map<String, Object> data : attendanceList) {
@@ -82,7 +87,7 @@ public class AttendanceDataController {
 
 
             }
-            attendanceDataRepository.saveAll(listData);
+           // attendanceDataRepository.saveAll(listData);
             return ResponseEntity.ok(Collections.singletonMap("message", "Attendance saved successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -92,18 +97,90 @@ public class AttendanceDataController {
     // Endpoint to retrieve all employees based on status
     @GetMapping("/getAll")
     public List<AttendanceData> getAllEmployees(@RequestParam String status) {
+
         return attendanceDataRepository.findByStatus(status);
     }
+    public  void readCSVForAttendanceData(String filePath) {
+        String line;
+        String regex = "\"([^\"]*)\"|([^,]+)"; // Regex to capture quoted and unquoted values
+        Pattern pattern = Pattern.compile(regex);
+
+        try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            br.readLine();
+            while ((line = br.readLine()) != null) {
+                List<String> values = new ArrayList<>();
+                Matcher matcher = pattern.matcher(line);
+
+                while (matcher.find()) {
+                    if (matcher.group(1) != null) {
+                        values.add(matcher.group(1)); // Quoted value
+                    } else {
+                        values.add(matcher.group(2)); // Unquoted value
+                    }
+                }
+
+                System.out.println(values.size()+"  "+values); // Print as a list
+                AttendanceData ee=new AttendanceData();
+                ee.setEarlyExitReason(values.get(1));
+                ee.setEmployeeId(values.get(2));
+                ee.setEntryDate(convertDate(values.get(3)));// date 3
+                ee.setEntryTime(parseDateTime(values.get(3),values.get(4)));
+                ee.setExitTime(parseDateTime(values.get(3),values.get(5)));
+                ee.setGlobalDayStatus(values.get(6));
+                ee.setLateEntryReason(values.get(7));
+                ee.setMonth(values.get(8));
+                ee.setName(values.get(9));
+                ee.setOuttime(values.get(10));
+                ee.setPresentTime(parseDateTime(values.get(3),values.get(11)));
+                ee.setStatus(values.get(12));
+                ee.setUpdateStatus(values.get(13));
+                ee.setYear(values.get(14));
+                attendanceDataRepository.save(ee);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    public static String convertDate(String inputDate) {
+        // Define the input formatter
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+
+        // Parse the input date
+        LocalDate date = LocalDate.parse(inputDate, inputFormatter);
+
+        // Convert it to the fixed date (February 5 of the same year)
+        LocalDate transformedDate = LocalDate.of(date.getYear(), 2, 5);
+
+        // Format and return as String
+        return transformedDate.format(outputFormatter);
+    }
+    public static LocalDateTime parseDateTime(String dateStr, String timeStr) {
+        System.out.println(dateStr+" "+timeStr);
+        DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy");
+        LocalDate date = LocalDate.parse(dateStr, dateFormatter);
+
+        String[] timeParts = timeStr.split(":");
+        int hours = Integer.parseInt(timeParts[0]);
+        int minutes = Integer.parseInt(timeParts[1].split("\\.")[0]); // Ignore milliseconds
+
+        // Adjust time overflow (e.g., 53 hours → 2 days + 5 hours)
+        int extraDays = hours / 24;
+        int adjustedHours = hours % 24;
+
+        return LocalDateTime.of(date.plusDays(extraDays), LocalTime.of(adjustedHours, minutes));
+    }
     @PostMapping("/getAllAttendanceData")
-    public List<AllEmployeeAttendanceData> getAttendanceEmployee(@RequestBody Map<String, String> requestData) {
+    public List<AllEmployeeAttendanceData> getAttendanceEmployee(@RequestBody Map<String, String> requestData,HttpServletRequest request) {
         String  startDate = requestData.get("startDate");
         String endDate = requestData.get("endDate");
 
-        return downloadService.getAllEmployeeAttendanceData(startDate, endDate);
+        return downloadService.getAllEmployeeAttendanceData(startDate, endDate,request.getHeader("Authorization"));
     }
 
     @PostMapping("/getAttendanceDataForAnyPeriod")
-    public List<AttendanceDataForAnyPeriod> getAttendanceDataForAnyPeriod(@RequestBody Map<String, String> requestData) {
+    public List<AttendanceDataForAnyPeriod> getAttendanceDataForAnyPeriod(@RequestBody Map<String, String> requestData, HttpServletRequest request) {
         String employeeId=requestData.get("employeeId");
         String employeeName=requestData.get("employeeName");
         String  startDate = requestData.get("startDate");
@@ -111,14 +188,14 @@ public class AttendanceDataController {
 
         //System.out.println("Okkkkk");
 
-        return attendanceService.getAttendanceDataForAnyPeriod(employeeId,employeeName,startDate, endDate);
+        return attendanceService.getAttendanceDataForAnyPeriod(employeeId,employeeName,startDate, endDate,request.getHeader("Authorization"));
     }
 
     @PostMapping("/getAllAttendanceDataForFixedDay")
-    public List<AttendanceDataForFixedDay> getAllAttendanceDataForFixedDay(@RequestBody Map<String, String> requestData) {
+    public List<AttendanceDataForFixedDay> getAllAttendanceDataForFixedDay(@RequestBody Map<String, String> requestData,HttpServletRequest request) {
         String  selectedDate = requestData.get("selectedDate");
 
-        return downloadService.getAllEmployeeAttendanceDataForFixedDay(selectedDate);
+        return downloadService.getAllEmployeeAttendanceDataForFixedDay(selectedDate,request.getHeader("Authorization"));
     }
 
     @PostMapping("/exportAllAttendanceData")
