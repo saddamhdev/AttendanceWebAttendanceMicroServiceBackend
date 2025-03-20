@@ -11,32 +11,18 @@ import java.util.Optional;
 @Repository
 public interface AttendanceDataRepository extends MongoRepository<AttendanceData, String> {
 
-    // Custom query to find attendance records by employeeId
-    List<AttendanceData> findByEmployeeId(String employeeId);
+
     List<AttendanceData> findByUpdateStatus(String updateStatus);
     List<AttendanceData> findByEntryDateAndUpdateStatus(String entryDate,String updateStatus);
     Optional<AttendanceData> findByEmployeeIdAndEntryDateAndUpdateStatus(String employeeId, String entryDate, String updateStatus);
-    // Custom query to find attendance records by employeeId and month
-    List<AttendanceData> findByEmployeeIdAndMonth(String employeeId, String month);
-
-    // Custom query to find attendance records by employeeId and year
-    List<AttendanceData> findByEmployeeIdAndYear(String employeeId, String year);
-
-    // Custom query to find attendance records by employeeId, month, and year
-    List<AttendanceData> findByEmployeeIdAndMonthAndYear(String employeeId, String month, String year);
 
     // Custom query to find attendance records by status
     List<AttendanceData> findByStatus(String status);
+    // i want a list according to status and (first entryDate and second entryDate . in this period data)
+// Find attendance records within a date range and a specific status
+    List<AttendanceData> findByEmployeeIdAndUpdateStatusAndEntryDateBetween(
+            String employeeId, String status, String startDate, String endDate);
+    List<AttendanceData> findByUpdateStatusAndEntryDateBetween(
+             String status, String startDate, String endDate);
 
-    // Custom query to find attendance records by entryDate
-    List<AttendanceData> findByEntryDate(String entryDate);
-
-    // Custom query to find attendance records by globalDayStatus
-    List<AttendanceData> findByGlobalDayStatus(String globalDayStatus);
-
-    // Custom query to find attendance records by presentTime between two dates
-    List<AttendanceData> findByPresentTimeBetween(LocalDateTime startDate, LocalDateTime endDate);
-
-    // Custom query to delete attendance records by employeeId
-    void deleteByEmployeeId(String employeeId);
 }

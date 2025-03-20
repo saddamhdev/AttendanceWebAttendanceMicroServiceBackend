@@ -133,7 +133,8 @@ public class AttendanceService {
         String  selectedparson=employeeName;
         List<AttendanceDataForAnyPeriod> resultList=new ArrayList<>();
 
-        List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
+           List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(employeeId,"1",startDate1,endDate1);
+           System.out.println("length :"+dataList.size());
         employeeList=userService.employeeList(header);
         if(dataList.size()>0)
         {

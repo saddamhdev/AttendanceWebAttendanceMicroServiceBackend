@@ -38,7 +38,7 @@ public class AttendanceDataController {
 
     @PostMapping("/insert")
     public ResponseEntity<?> insertAttendance(@RequestBody List<Map<String, Object>> attendanceList) {
-        readCSVForAttendanceData("C:\\Users\\Saddam\\Downloads/attendanceData.csv");
+       // readCSVForAttendanceData("C:\\Users\\Saddam\\Downloads/attendanceData2.csv");
         try {
             List <AttendanceData> listData=new ArrayList<>();
             for (Map<String, Object> data : attendanceList) {
@@ -87,7 +87,7 @@ public class AttendanceDataController {
 
 
             }
-           // attendanceDataRepository.saveAll(listData);
+           attendanceDataRepository.saveAll(listData);
             return ResponseEntity.ok(Collections.singletonMap("message", "Attendance saved successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -124,23 +124,31 @@ public class AttendanceDataController {
                 ee.setEarlyExitReason(values.get(1));
                 ee.setEmployeeId(values.get(2));
                 ee.setEntryDate(convertDate(values.get(3)));// date 3
-                ee.setEntryTime(parseDateTime(values.get(3),values.get(4)));
-                ee.setExitTime(parseDateTime(values.get(3),values.get(5)));
+                // ee.setEntryTime(parseDateTime(values.get(3),values.get(4)));
+                ee.setEntryTime(parseDateTime(values.get(4)));
+               // ee.setExitTime(parseDateTime(values.get(3),values.get(5)));
+                ee.setExitTime(parseDateTime(values.get(5)));
                 ee.setGlobalDayStatus(values.get(6));
                 ee.setLateEntryReason(values.get(7));
                 ee.setMonth(values.get(8));
                 ee.setName(values.get(9));
                 ee.setOuttime(values.get(10));
-                ee.setPresentTime(parseDateTime(values.get(3),values.get(11)));
+               // ee.setPresentTime(parseDateTime(values.get(3),values.get(11)));
+                ee.setPresentTime(parseDateTime(values.get(11)));
                 ee.setStatus(values.get(12));
                 ee.setUpdateStatus(values.get(13));
                 ee.setYear(values.get(14));
-                attendanceDataRepository.save(ee);
-
+               // attendanceDataRepository.save(ee);
+                System.out.println(ee.toString());
+                System.out.println();
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+    public static LocalDateTime parseDateTime(String dateTimeStr) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy H:mm", Locale.ENGLISH);
+        return LocalDateTime.parse(dateTimeStr, formatter);
     }
     public static String convertDate(String inputDate) {
         // Define the input formatter
@@ -151,13 +159,13 @@ public class AttendanceDataController {
         LocalDate date = LocalDate.parse(inputDate, inputFormatter);
 
         // Convert it to the fixed date (February 5 of the same year)
-        LocalDate transformedDate = LocalDate.of(date.getYear(), 2, 5);
+        LocalDate transformedDate = LocalDate.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 
         // Format and return as String
         return transformedDate.format(outputFormatter);
     }
     public static LocalDateTime parseDateTime(String dateStr, String timeStr) {
-        System.out.println(dateStr+" "+timeStr);
+       // System.out.println(dateStr+" "+timeStr);
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("M/d/yyyy");
         LocalDate date = LocalDate.parse(dateStr, dateFormatter);
 
@@ -186,7 +194,6 @@ public class AttendanceDataController {
         String  startDate = requestData.get("startDate");
         String endDate = requestData.get("endDate");
 
-        //System.out.println("Okkkkk");
 
         return attendanceService.getAttendanceDataForAnyPeriod(employeeId,employeeName,startDate, endDate,request.getHeader("Authorization"));
     }

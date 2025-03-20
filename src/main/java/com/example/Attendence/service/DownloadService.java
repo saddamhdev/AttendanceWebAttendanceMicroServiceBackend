@@ -214,7 +214,7 @@ public class DownloadService {
 
     public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1,String header){
         List<AllEmployeeAttendanceData> resultList=new ArrayList<>();
-        List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
+       // List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatusAndEntryDateBetween("1",startDate1,endDate1);
         employeeList=userService.employeeList(header);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -222,10 +222,10 @@ public class DownloadService {
         ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
         ChronoLocalDate endDate=LocalDate.parse(endDate1, formatter);
 
-        if(dataList.size()>0)
-        {
+
 
             employeeList.forEach(f->{
+                List<AttendanceData>   dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(f.getIdNumber(),"1",startDate1,endDate1);
                 totalExtraTime=0;
                 officedayc=0;presentdayc=0;avgtimec=0;leavedayc=0;absentdayc=0;holydayc=0;shorttimec=0;regulartimec=0;extratimec=0;intimec=0;latetimec=0;totallatetimec=0;okc=0;earlytimec=0;totalextratimec=0;
                 durationc=Duration.ZERO;totallatedurationc=Duration.ZERO;totalextradurationc=Duration.ZERO;outtimec=0;totaltimecc=Duration.ZERO;
@@ -261,7 +261,7 @@ public class DownloadService {
                                     Duration durationBetweenEntryExit = Duration.between(e.getEntryTime(), e.getExitTime());
                                     timeInSecond=timeInSecond+durationBetweenEntryExit.toHoursPart()*60L*60L+durationBetweenEntryExit.toMinutesPart()*60L;
                                     durationc = durationc.plus(durationBetweenEntryExit);
-                                    System.out.println("Current total duration (seconds): " + durationc.getSeconds());
+                                  //  System.out.println("Current total duration (seconds): " + durationc.getSeconds());
                                     presentdayc++;
                                     long hours = durationBetweenEntryExit.toHoursPart();
                                     long minutes = durationBetweenEntryExit.toMinutesPart();
@@ -269,7 +269,7 @@ public class DownloadService {
                                     // total hours calculate
                                     // need info:
                                     int settingHours= returnSettingTotalHour(e.getEmployeeId(),e.getName(),e.getEntryDate());
-                                    System.out.println(settingHours);
+                                  //  System.out.println(settingHours);
 
                                     if (hours < settingHours ) {
 
@@ -332,10 +332,10 @@ public class DownloadService {
                                         String fractionalPart = matcher.group(2);
                                         timeInSecondOfOutTime=timeInSecondOfOutTime+Long.parseLong(integerPart)*60L*60L+Long.parseLong(fractionalPart)*60L;
 
-                                        System.out.println("Integer Part: " + integerPart);
-                                        System.out.println("Fractional Part: " + fractionalPart);
+                                       // System.out.println("Integer Part: " + integerPart);
+                                      //  System.out.println("Fractional Part: " + fractionalPart);
                                     } else {
-                                        System.out.println("The input is not a valid decimal number.");
+                                        //System.out.println("The input is not a valid decimal number.");
                                     }
 
 
@@ -374,50 +374,24 @@ public class DownloadService {
 
                 if(result)
                 {
-                    // officeday.setText(Integer.toString(officedayc));
-                    // presentday.setText(Integer.toString(presentdayc));
+
                     intotaltimec=Duration.ofSeconds(timeInSecond);
 
-                    // outtime.setText(Double.toString(outtimec));
-
-                    // Convert decimal hours to seconds
-
-                    // Duration outT=Duration.ofSeconds(timeInSecondOfOutTime);
-
-                    // Create a Duration object
                     Duration outtimeduration = Duration.ofSeconds(timeInSecondOfOutTime);
 
 
                     totaltimecc= intotaltimec.plus(outtimeduration);
 
-                    // intotaltime.setText(intotaltimec.toHours()+":"+ intotaltimec.toMinutesPart());
-                    // totaltime.setText(totaltimecc.toHours()+":"+ totaltimecc.toMinutesPart());
 
                     if(presentdayc!=0)
                     {
                         long totalSeconds =  timeInSecond;
                         long averageSeconds = totalSeconds / presentdayc;
-                        System.out.println("Avg second " + totalSeconds);
+                     //   System.out.println("Avg second " + totalSeconds);
                         durationc = Duration.ofSeconds(averageSeconds);
                         /// total extra time
                         totalextradurationc=Duration.ofSeconds(totalExtraTime);
                     }
-
-
-                    // avgtime.setText( durationc.toHoursPart()+":"+ durationc.toMinutesPart());
-
-                    // leaveday.setText(Integer.toString(leavedayc));
-                    // absentday.setText(Integer.toString(absentdayc));
-                    // holyday.setText(Integer.toString(holydayc));
-                    // shorttime.setText(Integer.toString(shorttimec));
-                    //regulartime.setText(Integer.toString(regulartimec));
-                    // extratime.setText(Integer.toString(extratimec));
-                    // intime.setText(Integer.toString(intimec));
-                    // latetime.setText(Integer.toString(latetimec));
-                    // totallatetime.setText( totallatedurationc.toHoursPart()+":"+ totallatedurationc.toMinutesPart());
-                    // ok.setText(Integer.toString(presentdayc));
-                    // earlytime.setText(Integer.toString(earlytimec));
-                    // totalextratime.setText( totalextradurationc.toHoursPart()+":"+ totalextradurationc.toMinutesPart());
 
                     resultList.add(new AllEmployeeAttendanceData(
                             startDate1
@@ -445,7 +419,7 @@ public class DownloadService {
 
 
             });
-        }
+
 
 
 

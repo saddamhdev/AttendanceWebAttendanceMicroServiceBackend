@@ -1130,7 +1130,7 @@ public class UserAtAGlanceService {
         totaltimecc = Duration.ZERO;
         timeInSecond=0;
         timeInSecondOfOutTime=0;
-        List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
+        List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(employeeId,"1",startDate1,endDate1);
         employeeList=userService.employeeList(header);
 
         if (dataList.size() > 0) {
