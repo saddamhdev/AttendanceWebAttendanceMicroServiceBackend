@@ -22,12 +22,49 @@ public class localSettingController {
     @Autowired
     private LocalSettingRepository localSettingRepository;
     @PostMapping("/insert")
-    public LocalSetting insertEmployee(@RequestBody LocalSetting employeeData) {
-        System.out.println("Received Data: " + employeeData); // Debugging
-        // Save the employee data to the database
-        LocalSetting localSetting = localSettingRepository.save(employeeData);
-        // Return the saved employee data as a response
-        return localSetting;
+    public ResponseEntity<String> insertEmployee(@RequestBody LocalSetting employeeData) {
+        try {
+            if (employeeData == null) {
+                return ResponseEntity.badRequest().body("Error: Received null data.");
+            }
+
+            System.out.println("Received Data: " + employeeData); // Debugging log
+
+            localSettingRepository.save(employeeData);
+            return ResponseEntity.ok("Successfully inserted");
+        } catch (Exception e) {
+            System.err.println("Error inserting employee data: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to insert data. Please try again.");
+        }
+    }
+
+    @PostMapping("/update")
+    public ResponseEntity<String> update(@RequestBody Map<String,String> requestData) {
+        System.out.println(requestData);
+        Optional<LocalSetting> data=localSettingRepository.findById(requestData.get("id"));
+        if(data.isPresent()){
+            LocalSetting mm=data.get();
+            mm.setStatus("0");
+            localSettingRepository.save(mm);
+            localSettingRepository.save(new LocalSetting(
+                  requestData.get("employeeId"),
+                  requestData.get("name"),
+                  requestData.get("currentTime") ,
+                  requestData.get("formattedBirthDate")  ,
+                    requestData.get("formattedDeathDate"),
+                    requestData.get("startHours"),
+                    requestData.get("startMinute"),
+                    requestData.get("endHours"),
+                    requestData.get("endMinute"),
+                    requestData.get("totalHours"),
+                    requestData.get("designation"),
+                    requestData.get("status")
+            ));
+            return ResponseEntity.ok("Successfully updated");
+        }
+        return ResponseEntity.status(400).body("Failed to update");
+
     }
     @GetMapping("/getAll")
     public List<LocalSetting> retrieveData(){

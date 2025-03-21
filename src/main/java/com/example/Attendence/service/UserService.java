@@ -22,7 +22,6 @@ public class UserService {
                 restTemplate.getForEntity(userServiceUrl, Employee[].class);
 
         // Convert array to List
-        System.out.println(" hh "+Arrays.asList(Objects.requireNonNull(response.getBody())));
 
         return Arrays.asList(Objects.requireNonNull(response.getBody()));
     }
@@ -45,7 +44,7 @@ public class UserService {
         // Convert array to List
         List<Employee> employeeList = Arrays.asList(Objects.requireNonNull(response.getBody()));
 
-        System.out.println(" hh " + employeeList);
+
         return employeeList;
     }
 

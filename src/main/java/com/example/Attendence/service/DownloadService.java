@@ -23,23 +23,45 @@ import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class DownloadService {
 
-    LocalDate databaseDate=null;
-    Duration durationc=Duration.ZERO,totallatedurationc=Duration.ZERO,totalextradurationc=Duration.ZERO;Duration totaltimecc=Duration.ZERO;
-    Duration intotaltimec=Duration.ZERO;
-    int officedayc=0,presentdayc=0,avgtimec=0,totaltimec=0,leavedayc=0,absentdayc=0,holydayc=0,shorttimec=0,regulartimec=0,extratimec=0,intimec=0,latetimec=0,totallatetimec=0,okc=0,earlytimec=0,totalextratimec=0;
+    private ThreadLocal<LocalDate> databaseDate = ThreadLocal.withInitial(() -> null);
+    private ThreadLocal<Duration> durationc = ThreadLocal.withInitial(() -> Duration.ZERO);
+    private ThreadLocal<Duration> totallatedurationc = ThreadLocal.withInitial(() -> Duration.ZERO);
+    private ThreadLocal<Duration> totalextradurationc = ThreadLocal.withInitial(() -> Duration.ZERO);
+    private ThreadLocal<Duration> totaltimecc = ThreadLocal.withInitial(() -> Duration.ZERO);
+    private ThreadLocal<Duration> intotaltimec = ThreadLocal.withInitial(() -> Duration.ZERO);
+    private ThreadLocal<Integer> officedayc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> presentdayc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> avgtimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> totaltimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> leavedayc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> absentdayc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> holydayc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> shorttimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> regulartimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> extratimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> intimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> latetimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> totallatetimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> okc = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> earlytimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Integer> totalextratimec = ThreadLocal.withInitial(() -> 0);
+    private ThreadLocal<Long> timeInSecond = ThreadLocal.withInitial(() -> 0L);
+    private ThreadLocal<Long> totalExtraTime = ThreadLocal.withInitial(() -> 0L);
+    private ThreadLocal<Long> timeInSecondOfOutTime = ThreadLocal.withInitial(() -> 0L);
+    private ThreadLocal<Double> outtimec = ThreadLocal.withInitial(() -> 0.0);
+    private ThreadLocal<Boolean> result = ThreadLocal.withInitial(() -> false);
+
+
+
     List<Employee> employeeList;
-    long timeInSecond=0,totalExtraTime=0, timeInSecondOfOutTime=0;
-    double outtimec=0;
-    boolean result;
 
     @Autowired
     UserService userService;
@@ -222,23 +244,41 @@ public class DownloadService {
         ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
         ChronoLocalDate endDate=LocalDate.parse(endDate1, formatter);
 
+       /* Map<String, List<AttendanceData>> attendanceDataMap =
+                attendanceDataRepository.findByUpdateStatusAndEntryDateBetween("1", startDate1, endDate1)
+                        .stream()
+                        .collect(Collectors.groupingBy(AttendanceData::getEmployeeId));
 
 
-            employeeList.forEach(f->{
+        attendanceDataMap.forEach((employeeId, attendanceList) -> {
+            System.out.println("Employee: " + employeeId);
+            attendanceList.forEach(System.out::println);
+        });*/
+
+
+            employeeList.parallelStream().forEach(f->{
                 List<AttendanceData>   dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(f.getIdNumber(),"1",startDate1,endDate1);
-                totalExtraTime=0;
-                officedayc=0;presentdayc=0;avgtimec=0;leavedayc=0;absentdayc=0;holydayc=0;shorttimec=0;regulartimec=0;extratimec=0;intimec=0;latetimec=0;totallatetimec=0;okc=0;earlytimec=0;totalextratimec=0;
-                durationc=Duration.ZERO;totallatedurationc=Duration.ZERO;totalextradurationc=Duration.ZERO;outtimec=0;totaltimecc=Duration.ZERO;
-                intotaltimec=Duration.ZERO;outtimec=0;totaltimecc=Duration.ZERO;
-                timeInSecond=0;
-                result=false;
-                timeInSecondOfOutTime=0;
+               // List<AttendanceData>  dataList=attendanceDataMap.get(f.getIdNumber());
+                // If dataList is null or empty, handle the case
+                if (dataList == null || dataList.isEmpty()) {
+                    // Log the case where no data is found for this employee
+                    System.out.println("No attendance data found for employee: " + f.getIdNumber());
+                    return; // Skip processing for this employee
+                }
+
+                totalExtraTime.set(0L);
+                officedayc.set(0);presentdayc.set(0);avgtimec.set(0);leavedayc.set(0);absentdayc.set(0);holydayc.set(0);shorttimec.set(0);regulartimec.set(0);extratimec.set(0);intimec.set(0);latetimec.set(0);totallatetimec.set(0);okc.set(0);earlytimec.set(0);totalextratimec.set(0);
+                durationc.set(Duration.ZERO);totallatedurationc.set(Duration.ZERO);totalextradurationc.set(Duration.ZERO);outtimec.set(0.0);totaltimecc.set(Duration.ZERO);
+                intotaltimec.set(Duration.ZERO);outtimec.set(0.0);totaltimecc.set(Duration.ZERO);
+                timeInSecond.set(0L);
+                result.set(false);
+                timeInSecondOfOutTime.set(0L);
                 dataList.forEach(e->{
                     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                    databaseDate= LocalDate.now(); // Initialize with a default value
+                    databaseDate.set(LocalDate.now()); // Initialize with a default value
                     // Convert the string to LocalDate
                     try {
-                        databaseDate = LocalDate.parse(e.getEntryDate(), dateFormatter);
+                        databaseDate.set(LocalDate.parse(e.getEntryDate(), dateFormatter));
                         //System.out.println("Converted LocalDate: " + databaseDate);
                     } catch (DateTimeParseException g) {
                         g.printStackTrace(); // Handle parsing exception
@@ -246,23 +286,24 @@ public class DownloadService {
                     if (databaseDate != null) {
                        // System.out.println(databaseDate+" "+startDate+" "+endDate);
                         if (((databaseDate.equals(startDate) || databaseDate.equals(endDate))&& f.getName().equals(e.getName()) )||
-                                (databaseDate.isAfter(startDate) && databaseDate.isBefore(endDate)&& f.getName().equals(e.getName()))) {
+                                (databaseDate.get().isAfter(startDate) && databaseDate.get().isBefore(endDate)&& f.getName().equals(e.getName()))) {
 
                             LocalDate databaseDate1 = LocalDate.parse(f.getJoinDate(), dateFormatter);
-                            if ((e.getName().equals(f.getName()) && databaseDate1.isBefore(databaseDate)) || (e.getName().equals(f.getName()) && databaseDate1.isEqual(databaseDate))) {
-                                result=true;
+                            if ((e.getName().equals(f.getName()) && databaseDate1.isBefore(databaseDate.get())) || (e.getName().equals(f.getName()) && databaseDate1.isEqual(databaseDate.get()))) {
+                                result.set(true);
                                 if(!"Holiday".equals(e.getStatus()))
                                 {
-                                    officedayc++;
+
+                                    officedayc.set(officedayc.get()+1);
                                 }
 
                                 if("Present".equals(e.getStatus()))
                                 {
                                     Duration durationBetweenEntryExit = Duration.between(e.getEntryTime(), e.getExitTime());
-                                    timeInSecond=timeInSecond+durationBetweenEntryExit.toHoursPart()*60L*60L+durationBetweenEntryExit.toMinutesPart()*60L;
-                                    durationc = durationc.plus(durationBetweenEntryExit);
+                                    timeInSecond.set(timeInSecond.get()+durationBetweenEntryExit.toHoursPart()*60L*60L+durationBetweenEntryExit.toMinutesPart()*60L);
+                                    durationc.set(durationc.get().plus(durationBetweenEntryExit));
                                   //  System.out.println("Current total duration (seconds): " + durationc.getSeconds());
-                                    presentdayc++;
+                                    presentdayc.set(presentdayc.get()+1);
                                     long hours = durationBetweenEntryExit.toHoursPart();
                                     long minutes = durationBetweenEntryExit.toMinutesPart();
 
@@ -273,12 +314,15 @@ public class DownloadService {
 
                                     if (hours < settingHours ) {
 
-                                        shorttimec++;
+
+                                        shorttimec.set(shorttimec.get()+1);
                                     } else if (hours > settingHours || (hours == settingHours && minutes > 0)) {
 
-                                        extratimec++;
+
+                                        extratimec.set(extratimec.get()+1);
                                     } else {
-                                        regulartimec++;
+
+                                        regulartimec.set(regulartimec.get()+1);
 
                                     }
 
@@ -286,18 +330,20 @@ public class DownloadService {
                                     LocalTime lateThreshold = LocalTime.of(returnSettingStartHour(e.getEmployeeId(),e.getName(),e.getEntryDate()), (returnSettingStartMinute(e.getEmployeeId(),e.getName(),e.getEntryDate())+16));
 
                                     if ( e.getEntryTime().toLocalTime().isBefore(lateThreshold)) {
-                                        intimec++;
+
+                                        intimec.set(intimec.get()+1);
                                     }
 
                                     lateThreshold = LocalTime.of(returnSettingStartHour(e.getEmployeeId(),e.getName(),e.getEntryDate()), returnGlobalSettingLateMinute(e.getEntryDate()));
                                     // late count
                                     if ( e.getEntryTime().toLocalTime().isAfter(lateThreshold)) {
-                                        latetimec++;
+
+                                        latetimec.set(latetimec.get()+1);
 
                                         //late duration count
                                         Duration duration = Duration.between(lateThreshold, e.getEntryTime().toLocalTime());
                                         duration= addMinutesToDuration(duration , 15);
-                                        totallatedurationc=totallatedurationc.plus(duration);
+                                        totallatedurationc.set(totallatedurationc.get().plus(duration));
 
 
                                     }
@@ -305,7 +351,8 @@ public class DownloadService {
 
                                     LocalTime exitThreshold = LocalTime.of(returnSettingEndHour(e.getEmployeeId(),e.getName(),e.getEntryDate()), returnSettingEndMinute(e.getEmployeeId(),e.getName(),e.getEntryDate()));
                                     if ( e.getExitTime().toLocalTime().isBefore(exitThreshold)) {
-                                        earlytimec++;
+
+                                        earlytimec.set(earlytimec.get()+1);
                                     }
 
 
@@ -316,7 +363,7 @@ public class DownloadService {
 
                                         if(e.getExitTime().toLocalTime().isAfter(exitThreshold1)){
                                             Duration duration = Duration.between(exitThreshold, e.getExitTime().toLocalTime());
-                                            totalExtraTime=totalExtraTime+duration.toHoursPart()*60L*60L+duration.toMinutesPart()*60L;
+                                            totalExtraTime.set(totalExtraTime.get()+duration.toHoursPart()*60L*60L+duration.toMinutesPart()*60L);
                                             // totalextradurationc=totalextradurationc.plus(duration);
                                         }
 
@@ -330,12 +377,12 @@ public class DownloadService {
                                     if (matcher.matches()) {
                                         String integerPart = matcher.group(1);
                                         String fractionalPart = matcher.group(2);
-                                        timeInSecondOfOutTime=timeInSecondOfOutTime+Long.parseLong(integerPart)*60L*60L+Long.parseLong(fractionalPart)*60L;
+                                        timeInSecondOfOutTime.set(timeInSecondOfOutTime.get()+Long.parseLong(integerPart)*60L*60L+Long.parseLong(fractionalPart)*60L);
 
                                        // System.out.println("Integer Part: " + integerPart);
-                                      //  System.out.println("Fractional Part: " + fractionalPart);
+                                       // System.out.println("Fractional Part: " + fractionalPart);
                                     } else {
-                                        //System.out.println("The input is not a valid decimal number.");
+                                     //   System.out.println("The input is not a valid decimal number.");
                                     }
 
 
@@ -345,21 +392,23 @@ public class DownloadService {
                                 {
 
 
-                                    leavedayc++;
+
+                                    leavedayc.set(leavedayc.get()+1);
                                 }
 
                                 if("Absent".equals(e.getStatus()))
                                 {
 
 
-                                    absentdayc++;
+                                    absentdayc.set(absentdayc.get()+1);
                                 }
 
                                 if("Holyday".equals(e.getStatus()))
                                 {
 
 
-                                    holydayc++;
+
+                                    holydayc.set(holydayc.get()+1);
                                 }
 
 
@@ -372,47 +421,59 @@ public class DownloadService {
 
                 });
 
-                if(result)
+                if(result.get())
                 {
+                    // officeday.setText(Integer.toString(officedayc));
+                    // presentday.setText(Integer.toString(presentdayc));
+                    intotaltimec.set(Duration.ofSeconds(timeInSecond.get()));
 
-                    intotaltimec=Duration.ofSeconds(timeInSecond);
+                    // outtime.setText(Double.toString(outtimec));
 
-                    Duration outtimeduration = Duration.ofSeconds(timeInSecondOfOutTime);
+                    // Convert decimal hours to seconds
+
+                    // Duration outT=Duration.ofSeconds(timeInSecondOfOutTime);
+
+                    // Create a Duration object
+                    Duration outtimeduration = Duration.ofSeconds(timeInSecondOfOutTime.get());
 
 
-                    totaltimecc= intotaltimec.plus(outtimeduration);
+                    totaltimecc.set(intotaltimec.get().plus(outtimeduration));
 
+                    // intotaltime.setText(intotaltimec.toHours()+":"+ intotaltimec.toMinutesPart());
+                    // totaltime.setText(totaltimecc.toHours()+":"+ totaltimecc.toMinutesPart());
 
-                    if(presentdayc!=0)
+                    if(presentdayc.get()!=0)
                     {
-                        long totalSeconds =  timeInSecond;
-                        long averageSeconds = totalSeconds / presentdayc;
-                     //   System.out.println("Avg second " + totalSeconds);
-                        durationc = Duration.ofSeconds(averageSeconds);
+                        long totalSeconds =  timeInSecond.get();
+                        long averageSeconds = totalSeconds / presentdayc.get();
+                       // System.out.println(f.getName()+ " Avg second " + totalSeconds);
+                        durationc.set(Duration.ofSeconds(averageSeconds));
                         /// total extra time
-                        totalextradurationc=Duration.ofSeconds(totalExtraTime);
+                        totalextradurationc.set(Duration.ofSeconds(totalExtraTime.get()));
                     }
+
+
 
                     resultList.add(new AllEmployeeAttendanceData(
                             startDate1
                             ,
-                            endDate1,f.getIdNumber(),f.getName(),Integer.toString(officedayc),Integer.toString(presentdayc),
-                            durationc.toHoursPart()+":"+ durationc.toMinutesPart(),
-                            Integer.toString(leavedayc),
-                            Integer.toString(absentdayc),
-                            Integer.toString(holydayc),
-                            Integer.toString(shorttimec),
-                            Integer.toString(regulartimec),
-                            Integer.toString(extratimec),
-                            Integer.toString(intimec),
-                            Integer.toString(latetimec),
-                            totallatedurationc.toHoursPart()+":"+ totallatedurationc.toMinutesPart(),
-                            Integer.toString(presentdayc),
-                            Integer.toString(earlytimec),
-                            totalextradurationc.toHoursPart()+":"+ totalextradurationc.toMinutesPart(),
+                            endDate1,f.getIdNumber(),f.getName(),Integer.toString(officedayc.get()),Integer.toString(presentdayc.get()),
+                            durationc.get().toHoursPart()+":"+ durationc.get().toMinutesPart(),
+                            Integer.toString(leavedayc.get()),
+                            Integer.toString(absentdayc.get()),
+                            Integer.toString(holydayc.get()),
+                            Integer.toString(shorttimec.get()),
+                            Integer.toString(regulartimec.get()),
+                            Integer.toString(extratimec.get()),
+                            Integer.toString(intimec.get()),
+                            Integer.toString(latetimec.get()),
+                            totallatedurationc.get().toHoursPart()+":"+ totallatedurationc.get().toMinutesPart(),
+                            Integer.toString(presentdayc.get()),
+                            Integer.toString(earlytimec.get()),
+                            totalextradurationc.get().toHoursPart()+":"+ totalextradurationc.get().toMinutesPart(),
                             outtimeduration.toHours() + ":" + outtimeduration.toMinutesPart(),
-                            intotaltimec.toHours()+":"+ intotaltimec.toMinutesPart(),
-                            totaltimecc.toHours()+":"+ totaltimecc.toMinutesPart()));
+                            intotaltimec.get().toHours()+":"+ intotaltimec.get().toMinutesPart(),
+                            totaltimecc.get().toHours()+":"+ totaltimecc.get().toMinutesPart()));
                 }
 
 
@@ -421,8 +482,38 @@ public class DownloadService {
             });
 
 
+        // i want to rearrange resultList by IdNumber of attendanceData . compare with employeelist employeeId
+// Rearrange the resultList based on employeeList order
+        resultList.sort(new Comparator<AllEmployeeAttendanceData>() {
+            @Override
+            public int compare(AllEmployeeAttendanceData data1, AllEmployeeAttendanceData data2) {
+                String idNumber1 = data1.getSerial();  // get EmployeeId from the AllEmployeeAttendanceData
+                String idNumber2 = data2.getSerial();  // get EmployeeId from the AllEmployeeAttendanceData
 
+                // Create a map to store employeeId and their index
+                Map<String, Integer> employeeIndexMap = new HashMap<>();
 
+                // Fill the map with employeeId -> index from employeeList
+                for (int i = 0; i < employeeList.size(); i++) {
+                    employeeIndexMap.put(employeeList.get(i).getIdNumber(), i);
+                }
+
+                // Get indices from the map
+                Integer index1 = employeeIndexMap.get(idNumber1);
+                Integer index2 = employeeIndexMap.get(idNumber2);
+
+                // If either ID is not found, treat them as the end of the list or handle accordingly
+                if (index1 == null) {
+                    return 1; // Put elements with unknown employeeId at the end
+                }
+                if (index2 == null) {
+                    return -1; // Put elements with unknown employeeId at the end
+                }
+
+                // Compare based on the employeeList index order
+                return Integer.compare(index1, index2);
+            }
+        });
         return  resultList;
     }
     public static String checkTimeDifference(Duration duration) {

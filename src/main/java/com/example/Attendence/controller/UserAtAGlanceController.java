@@ -30,10 +30,7 @@ public class UserAtAGlanceController {
             @RequestParam(required = false) String endDate, HttpServletRequest request) {
 
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
-        if(dataList.size()>0)
-            System.out.println("Ok");
-        else
-            System.out.println("No");
+
 
         return userAtAGlanceService.getUserAtAGlanceData(employeeId, employeeName, startDate, endDate,request.getHeader("Authorization"));
     }
