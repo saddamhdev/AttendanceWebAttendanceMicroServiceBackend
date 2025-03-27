@@ -27,20 +27,32 @@ import java.io.IOException;
 public class SecurityConfig {
 
     private final JwtFilter jwtFilter;
-    @Value("${cors.allowed.origins}")
-    private String[] allowedOrigins;
+    @Value("${spring.profiles.active}")
+    private String activeProfile;
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins(allowedOrigins)
+                        .allowedOrigins(getAllowedOrigins())
                         .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
             }
         };
+    }
+    // Dynamically get allowed origins based on environment
+    private String[] getAllowedOrigins() {
+        String environment = activeProfile;
+        System.out.println(environment);
+        if ("prod".equalsIgnoreCase(environment)) {
+            System.out.println("Online checking:");
+            return new String[]{"http://localhost:3000", "http://ec2-13-51-206-164.eu-north-1.compute.amazonaws.com"};
+        } else {
+            //System.out.println("local host checking:");
+            return new String[]{"http://localhost:3000"};
+        }
     }
     @Bean
     public PasswordEncoder passwordEncoder() {
