@@ -7,6 +7,7 @@ import com.example.Attendence.repository.PositionRepository;
 import com.example.Attendence.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,9 +20,10 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/positionSetting") // Base URL for all endpoints in this controller
-@CrossOrigin(origins = "http://localhost:3000")
 public class PositionController {
-
+    // Inject the URL from application.properties or environment variable
+    @Value("${user.service.base.url:http://localhost:8080/api/user}")
+    private String userServiceBaseUrl;
 @Autowired
     UserService userService;
     @Autowired
@@ -67,7 +69,7 @@ public class PositionController {
                 String idNumber = URLEncoder.encode(singleRowData.getIdNumber(), StandardCharsets.UTF_8);
                 System.out.println("number"+idNumber);
                 String name = URLEncoder.encode(singleRowData.getName(), StandardCharsets.UTF_8);
-                String url = "http://localhost:8080/api/user/updatePosition?idNumber="
+                String url = userServiceBaseUrl+"/updatePosition?idNumber="
                         + idNumber
                         + "&name=" + name
                         + "&status=1"  // Removed extra space before &newPosition
@@ -86,7 +88,7 @@ public class PositionController {
 
                 String idNumber = URLEncoder.encode(employeeList.get(i).getIdNumber(), StandardCharsets.UTF_8);
                 String name = URLEncoder.encode(employeeList.get(i).getName(), StandardCharsets.UTF_8);
-                String url = "http://localhost:8080/api/user/updatePosition?idNumber="
+                String url = userServiceBaseUrl+"/updatePosition?idNumber="
                         + idNumber
                         + "&name=" + name
                         + "&status=1"  // Removed extra space before &newPosition
@@ -109,7 +111,7 @@ public class PositionController {
                // repositoryManager.getRegistrationRepository().updatePosition(employeeList.get(i).getIdNumber(),employeeList.get(i).getName(),"1",Integer.toString(cc));
                 String idNumber = URLEncoder.encode(employeeList.get(i).getIdNumber(), StandardCharsets.UTF_8);
                 String name = URLEncoder.encode(employeeList.get(i).getName(), StandardCharsets.UTF_8);
-                String url = "http://localhost:8080/api/user/updatePosition?idNumber="
+                String url = userServiceBaseUrl+"/updatePosition?idNumber="
                         + idNumber
                         + "&name=" + name
                         + "&status=1"  // Removed extra space before &newPosition

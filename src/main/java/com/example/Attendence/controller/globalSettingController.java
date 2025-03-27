@@ -18,7 +18,6 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/globalSetting") // Base URL for all endpoints in this controller
-@CrossOrigin(origins = "http://localhost:3000")
 public class globalSettingController {
     @Autowired
     private  GlobalSettingRepository globalSettingRepository;

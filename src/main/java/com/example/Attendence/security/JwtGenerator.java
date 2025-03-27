@@ -121,7 +121,7 @@ public class JwtGenerator {
         return claims.getSubject(); // Subject is the username
     }
 
-    public static boolean isTokenValid(String token) {
+    public  boolean isTokenValid(String token) {
         try {
             Claims claims = Jwts.parser()
                     .setSigningKey(Base64.getDecoder().decode(secretKey))

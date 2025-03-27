@@ -25,7 +25,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/attendance") // Base URL for all endpoints in this controller
-@CrossOrigin(origins = "http://localhost:3000")
 public class AttendanceDataController {
     @Autowired
     private AttendanceDataRepository attendanceDataRepository;

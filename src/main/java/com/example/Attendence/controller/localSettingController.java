@@ -17,7 +17,6 @@ import java.util.regex.Pattern;
 
 @RestController
 @RequestMapping("/api/localSetting") // Base URL for all endpoints in this controller
-@CrossOrigin(origins = "http://localhost:3000")
 public class localSettingController {
     @Autowired
     private LocalSettingRepository localSettingRepository;

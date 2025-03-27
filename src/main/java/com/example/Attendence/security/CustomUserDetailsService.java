@@ -24,7 +24,6 @@ public class CustomUserDetailsService implements UserDetailsService {
     }
 
     public UserDetails loadUserByUsername(String username,String header) throws UsernameNotFoundException {
-       System.out.println("Ok");
         List<Employee> data = userService.employeeList(header);
 
            Employee gg=data.stream()

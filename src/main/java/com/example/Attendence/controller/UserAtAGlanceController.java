@@ -15,7 +15,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/userAtAGlance") // Base URL for all endpoints in this controller
-@CrossOrigin(origins = "http://localhost:3000")
 public class UserAtAGlanceController {
     @Autowired
     private UserAtAGlanceService userAtAGlanceService;

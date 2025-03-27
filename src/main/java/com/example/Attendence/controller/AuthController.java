@@ -3,7 +3,6 @@ import com.example.Attendence.Utility.TimeBasedTokenUtil;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "http://localhost:3000") // Allow frontend to access this endpoint
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

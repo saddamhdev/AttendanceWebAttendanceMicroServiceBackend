@@ -48,6 +48,10 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         final String token = authHeader.substring(7);
+        if(jwtUtil.isTokenValid(token)){
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
         final String username = jwtUtil.extractUsername(token);
 
         if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {

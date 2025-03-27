@@ -1,6 +1,7 @@
 package com.example.Attendence.service;
 
 import com.example.Attendence.model.Employee;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -12,23 +13,24 @@ import java.util.Objects;
 
 @Service
 public class UserService {
+
     @Autowired
     private RestTemplate restTemplate;
-    public List<Employee> employeeList(){
-        String userServiceUrl = "http://localhost:8080/api/user/getAll?status=1";  // Provide a valid status// Replace with actual URL
 
-        // Call the external API
+    // Inject the URL from application.properties or environment variable
+    @Value("${user.service.url:http://localhost:8080/api/user/getAll?status=1}")
+    private String userServiceUrl;
+
+    public List<Employee> employeeList() {
+        // Call the external API without headers
         ResponseEntity<Employee[]> response =
                 restTemplate.getForEntity(userServiceUrl, Employee[].class);
 
         // Convert array to List
-
         return Arrays.asList(Objects.requireNonNull(response.getBody()));
     }
 
     public List<Employee> employeeList(String header) {
-        String userServiceUrl = "http://localhost:8080/api/user/getAll?status=1";
-
         // Set headers
         HttpHeaders headers = new HttpHeaders();
         headers.set("Authorization", header); // Use the provided header
@@ -44,8 +46,6 @@ public class UserService {
         // Convert array to List
         List<Employee> employeeList = Arrays.asList(Objects.requireNonNull(response.getBody()));
 
-
         return employeeList;
     }
-
 }
