@@ -97,7 +97,7 @@ public class AttendanceDataController {
     @GetMapping("/getAll")
     public List<AttendanceData> getAllEmployees(@RequestParam String status) {
 
-        return attendanceDataRepository.findByStatus(status);
+        return attendanceDataRepository.findByUpdateStatus(status);
     }
     public  void readCSVForAttendanceData(String filePath) {
         String line;

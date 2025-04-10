@@ -42,13 +42,15 @@ public class SecurityConfig {
             }
         };
     }
-    // Dynamically get allowed origins based on environment
+    // Dynamically get allowed origins based on environment 
+    // and set the url to 13-51-206-164.eu-north-1.compute.amazonaws.com for prod and localhost for local
     private String[] getAllowedOrigins() {
         String environment = activeProfile;
         System.out.println(environment);
         if ("prod".equalsIgnoreCase(environment)) {
             System.out.println("Online checking:");
-            return new String[]{"http://localhost:3000", "http://ec2-13-51-206-164.eu-north-1.compute.amazonaws.com"};
+            return new String[]{"https://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:3000","http://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:8080","http://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:8181"};
+
         } else {
             //System.out.println("local host checking:");
             return new String[]{"http://localhost:3000"};

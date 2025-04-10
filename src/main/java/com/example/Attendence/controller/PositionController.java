@@ -22,9 +22,9 @@ import java.util.*;
 @RequestMapping("/api/positionSetting") // Base URL for all endpoints in this controller
 public class PositionController {
     // Inject the URL from application.properties or environment variable
-    @Value("${user.service.base.url:http://localhost:8080/api/user}")
+    @Value("${user.service.base.url}")
     private String userServiceBaseUrl;
-@Autowired
+    @Autowired
     UserService userService;
     @Autowired
     private RestTemplate restTemplate;

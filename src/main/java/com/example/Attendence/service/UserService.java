@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
+
 @Service
 public class UserService {
 
@@ -18,7 +19,8 @@ public class UserService {
     private RestTemplate restTemplate;
 
     // Inject the URL from application.properties or environment variable
-    @Value("${user.service.url:http://localhost:8080/api/user/getAll?status=1}")
+   
+    @Value("${user.service.url}")
     private String userServiceUrl;
 
     public List<Employee> employeeList() {

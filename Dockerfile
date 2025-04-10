@@ -5,7 +5,6 @@ WORKDIR /app
 # Copy JAR file into container
 COPY target/*.jar Attendence-0.0.1-SNAPSHOT.jar
 # Run the application
-ENTRYPOINT ["java", "-jar", "Attendence-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "Attendence-0.0.1-SNAPSHOT.jar","--server.port=8181"]
 
-# Expose port
-EXPOSE 8181
+
