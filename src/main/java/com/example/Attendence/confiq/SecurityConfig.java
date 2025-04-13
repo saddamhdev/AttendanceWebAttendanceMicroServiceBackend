@@ -49,11 +49,11 @@ public class SecurityConfig {
         System.out.println(environment);
         if ("prod".equalsIgnoreCase(environment)) {
             System.out.println("Online checking:");
-            return new String[]{"https://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:3000","http://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:8080","http://ec2-16-171-0-77.eu-north-1.compute.amazonaws.com:8181"};
+            return new String[]{"https://159.89.172.251:3082","http://159.89.172.251:3080","http://159.89.172.251:3081"};
 
         } else {
             //System.out.println("local host checking:");
-            return new String[]{"http://localhost:3000"};
+            return new String[]{"http://localhost:3082"};
         }
     }
     @Bean

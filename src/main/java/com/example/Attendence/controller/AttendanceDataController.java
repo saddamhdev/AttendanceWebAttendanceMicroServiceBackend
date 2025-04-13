@@ -5,6 +5,7 @@ import com.example.Attendence.service.AttendanceService;
 import com.example.Attendence.service.DownloadService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -210,11 +211,9 @@ public class AttendanceDataController {
         return downloadService.exportAllAttendanceData(attendanceData);
     }
     @PostMapping("/exportSummaryAttendanceData")
-    public ResponseEntity<String> exportSummaryAttendanceData(@RequestBody List<AttendanceDataForAnyPeriod> attendanceData) {
+    public ResponseEntity<String> exportSummaryAttendanceData(@RequestBody List<AttendanceDataForAnyPeriod> attendanceData, HttpServletResponse response) {
 
-
-
-        return attendanceService.exportSummaryAttendanceData(attendanceData);
+        return attendanceService.exportSummaryAttendanceData(attendanceData,response);
     }
     @PostMapping("/updateAttendanceData")
     public ResponseEntity<String> updateAttendanceData(@RequestBody Map<String, List<AttendanceDataForFixedDay>> requestData) {
