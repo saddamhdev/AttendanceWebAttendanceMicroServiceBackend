@@ -7,6 +7,7 @@ import com.example.Attendence.model.UserAtAGlance;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.service.UserAtAGlanceService;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -35,8 +36,8 @@ public class UserAtAGlanceController {
     }
 
     @PostMapping("/exportAtAGlanceData")
-    public ResponseEntity<String> updateSorting(@RequestBody UserAtAGlance userAtAGlance) {
-        return userAtAGlanceService.exportAtAGlance(userAtAGlance);
+    public void updateSorting(@RequestBody UserAtAGlance userAtAGlance, HttpServletResponse response) {
+        userAtAGlanceService.exportAtAGlance(userAtAGlance,response);
     }
 
 }

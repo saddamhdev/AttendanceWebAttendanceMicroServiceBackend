@@ -3,6 +3,8 @@ import com.example.Attendence.model.*;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.repository.GlobalSettingRepository;
 import com.example.Attendence.repository.LocalSettingRepository;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFColor;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,7 +49,7 @@ public class UserAtAGlanceService {
     @Autowired
     private GlobalSettingRepository globalSettingRepository;
 
-    public ResponseEntity<String> exportAtAGlance(UserAtAGlance userAtAGlance){
+    public void exportAtAGlance(UserAtAGlance userAtAGlance, HttpServletResponse response){
 
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Employee Data");
@@ -1064,21 +1066,20 @@ public class UserAtAGlanceService {
 
 
 
-        // Get the user's Downloads directory
-        String downloadsPath = System.getProperty("user.home") + File.separator + "Downloads";
-
-        // Generate a timestamp for the filename
+        // Create a filename
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String filename = "Employee_Report_" + timestamp + ".xlsx";
 
-        // Create the file with the employee name and timestamp
-        File file = new File(downloadsPath, "User At A Glance Report_"+userAtAGlance.getEmployeeName()+"_" + timestamp + ".xlsx");
+        // Set download response headers
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
-        // Save the workbook to the file
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            workbook.write(fos);
-            System.out.println("Excel file saved successfully at: " + file.getAbsolutePath());
+        try (ServletOutputStream out = response.getOutputStream()) {
+            workbook.write(out);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             try {
                 workbook.close();
@@ -1086,8 +1087,6 @@ public class UserAtAGlanceService {
                 e.printStackTrace();
             }
         }
-
-        return ResponseEntity.ok("Exported successfully");
     }
 
     public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1,String header) {

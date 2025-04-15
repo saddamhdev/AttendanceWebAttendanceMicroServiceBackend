@@ -4,6 +4,8 @@ import com.example.Attendence.model.*;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.repository.GlobalSettingRepository;
 import com.example.Attendence.repository.LocalSettingRepository;
+import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -131,7 +133,7 @@ public class DownloadService {
         return result;
     }
 
-    public ResponseEntity<String> exportAllAttendanceData(List<AllEmployeeAttendanceData> dataList) {
+    public void exportAllAttendanceData(List<AllEmployeeAttendanceData> dataList, HttpServletResponse response) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Employee Data");
 
@@ -206,22 +208,20 @@ public class DownloadService {
             row.createCell(18).setCellValue(data.getOfficeInTime());
             row.createCell(19).setCellValue(data.getTotalTime());
         }
-            // Get the user's Downloads directory
-        String downloadsPath = System.getProperty("user.home") + File.separator + "Downloads";
-
-        // Generate a timestamp for the filename
+        // Create a filename
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+        String filename = "Employee_Report_" + timestamp + ".xlsx";
 
-        // Create the file with the employee name and timestamp
-        File file = new File(downloadsPath, "All_Employee_Report_" + timestamp + ".xlsx");
+        // Set download response headers
+        response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
-        // Save the workbook to the file
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            workbook.write(fos);
-            System.out.println("Excel file saved successfully at: " + file.getAbsolutePath());
+        try (ServletOutputStream out = response.getOutputStream()) {
+            workbook.write(out);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(500).body("Error occurred while exporting data.");
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             try {
                 workbook.close();
@@ -229,9 +229,6 @@ public class DownloadService {
                 e.printStackTrace();
             }
         }
-
-        // Return success message
-        return ResponseEntity.ok("Successfully Exported to: " + file.getAbsolutePath());
     }
 
     public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1,String header){

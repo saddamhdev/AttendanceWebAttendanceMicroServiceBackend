@@ -206,15 +206,18 @@ public class AttendanceDataController {
     }
 
     @PostMapping("/exportAllAttendanceData")
-    public ResponseEntity<String> exportAllAttendanceData(@RequestBody List<AllEmployeeAttendanceData> attendanceData) {
+    public void exportAllAttendanceData(@RequestBody List<AllEmployeeAttendanceData> attendanceData,HttpServletResponse response) {
 
-        return downloadService.exportAllAttendanceData(attendanceData);
+         downloadService.exportAllAttendanceData(attendanceData,response);
     }
     @PostMapping("/exportSummaryAttendanceData")
-    public ResponseEntity<String> exportSummaryAttendanceData(@RequestBody List<AttendanceDataForAnyPeriod> attendanceData, HttpServletResponse response) {
-
-        return attendanceService.exportSummaryAttendanceData(attendanceData,response);
+    public void exportSummaryAttendanceData(
+            @RequestBody List<AttendanceDataForAnyPeriod> attendanceData,
+            HttpServletResponse response
+    ) {
+        attendanceService.exportSummaryAttendanceData(attendanceData, response);
     }
+
     @PostMapping("/updateAttendanceData")
     public ResponseEntity<String> updateAttendanceData(@RequestBody Map<String, List<AttendanceDataForFixedDay>> requestData) {
         List<AttendanceDataForFixedDay> newData = requestData.get("newData"); // Take first element

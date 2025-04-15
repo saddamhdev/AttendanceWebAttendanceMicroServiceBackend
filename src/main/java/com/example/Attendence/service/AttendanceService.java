@@ -4,6 +4,7 @@ import com.example.Attendence.model.*;
 import com.example.Attendence.repository.AttendanceDataRepository;
 import com.example.Attendence.repository.GlobalSettingRepository;
 import com.example.Attendence.repository.LocalSettingRepository;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
@@ -42,23 +43,20 @@ public class AttendanceService {
     @Autowired
     private AttendanceDataRepository attendanceDataRepository;
 
-    public ResponseEntity<String> exportSummaryAttendanceData(List<AttendanceDataForAnyPeriod> dataList, HttpServletResponse response) {
+    public void exportSummaryAttendanceData(List<AttendanceDataForAnyPeriod> dataList, HttpServletResponse response) {
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Employee Data");
 
-        // Create a style for the "Starting Date" and "End Date" row
+        // Style for date row
         CellStyle dateRowStyle = workbook.createCellStyle();
         dateRowStyle.setAlignment(HorizontalAlignment.CENTER);
         dateRowStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-        // Create the first row with Starting Date and End Date
+        // First row: Starting and Ending dates
         Row dateRow = sheet.createRow(0);
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 1));
+        sheet.addMergedRegion(new CellRangeAddress(0, 0, 2, 3));
 
-        // Merge cells for "Starting Date" and "End Date"
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 0, 1)); // Merge first and second columns
-        sheet.addMergedRegion(new CellRangeAddress(0, 0, 2, 3)); // Merge third and fourth columns
-
-        // Add "Starting Date" and "End Date"
         Cell startDateCell = dateRow.createCell(0);
         startDateCell.setCellValue("Starting Date: " + dataList.getFirst().getStartDate());
         startDateCell.setCellStyle(dateRowStyle);
@@ -67,7 +65,7 @@ public class AttendanceService {
         endDateCell.setCellValue("End Date: " + dataList.getFirst().getEndDate());
         endDateCell.setCellStyle(dateRowStyle);
 
-        // Create header row (second row, index 1)
+        // Header row
         Row headerRow = sheet.createRow(1);
         String[] headers = {
                 "Date", "Entry Time", "Late Duration", "Entry Comment", "Exit Time",
@@ -75,20 +73,18 @@ public class AttendanceService {
                 "Day Comment", "Comment"
         };
 
-        // Create header row style
         CellStyle headerStyle = workbook.createCellStyle();
         headerStyle.setAlignment(HorizontalAlignment.CENTER);
         headerStyle.setVerticalAlignment(VerticalAlignment.CENTER);
 
-        // Populate header row
         for (int i = 0; i < headers.length; i++) {
             Cell cell = headerRow.createCell(i);
             cell.setCellValue(headers[i]);
             cell.setCellStyle(headerStyle);
         }
 
-        // Add data rows
-        int rowIndex = 2; // Start from row 2
+        // Data rows
+        int rowIndex = 2;
         for (AttendanceDataForAnyPeriod data : dataList) {
             Row row = sheet.createRow(rowIndex++);
 
@@ -105,22 +101,20 @@ public class AttendanceService {
             row.createCell(10).setCellValue(data.getComment());
         }
 
-        // Generate a filename with timestamp
+        // Create a filename
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
         String filename = "Employee_Report_" + timestamp + ".xlsx";
 
-        // Set response headers for file download
+        // Set download response headers
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-        response.setHeader("Content-Disposition", "attachment; filename=" + filename);
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + filename + "\"");
 
-        try {
-            // Write the Excel data to the response output stream
-            workbook.write(response.getOutputStream());
-            response.getOutputStream().flush();
-            System.out.println("Excel file sent to user as a download.");
+        try (ServletOutputStream out = response.getOutputStream()) {
+            workbook.write(out);
+            out.flush();
         } catch (IOException e) {
             e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error occurred while exporting data.");
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             try {
                 workbook.close();
@@ -128,8 +122,8 @@ public class AttendanceService {
                 e.printStackTrace();
             }
         }
-        return ResponseEntity.ok("Data exported successfully");
     }
+
 
     public List<AttendanceDataForAnyPeriod> getAttendanceDataForAnyPeriod(String employeeId,String employeeName,String startDate1,String endDate1,String header){
         DateTimeFormatter formatter1 = DateTimeFormatter.ofPattern("yyyy-MM-dd");
