@@ -134,8 +134,8 @@ public class AttendanceService {
         String  selectedparson=employeeName;
         List<AttendanceDataForAnyPeriod> resultList=new ArrayList<>();
 
-           List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(employeeId,"1",startDate1,endDate1);
-           System.out.println("length :"+dataList.size());
+           List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(employeeId,"1",startDate1,endDate1);
+
         employeeList=userService.employeeList(header);
         if(dataList.size()>0)
         {
@@ -240,7 +240,7 @@ public class AttendanceService {
                                     // Compare with the threshold and print the result
                                     String overtimeduration;
                                     String exitcomment;
-                                    System.out.println(overtimeThreshold+" "+currentTime);
+                                   // System.out.println(overtimeThreshold+" "+currentTime);
                                     if (currentTime.isBefore(overtimeThreshold)) {
                                         LocalTime  overtimeThreshold1 = LocalTime.of(returnSettingEndHour(e.getEmployeeId(),e.getName(),e.getEntryDate()), returnSettingEndMinute(e.getEmployeeId(),e.getName(),e.getEntryDate()));
                                         Duration duration = Duration.between(currentTime,overtimeThreshold1);
@@ -339,10 +339,7 @@ public class AttendanceService {
             }
         }
 
-        // Log changed data
-        if (!changedData.isEmpty()) {
-            changedData.forEach(record -> System.out.println("Changed Data: " + record));
-        }
+
 
         // Step 2: Update old records' status to "0" (Only for changed records)
         changedData.forEach(e -> {
@@ -394,11 +391,7 @@ public class AttendanceService {
                 oldRecord.getGlobalDayStatus().equals(newRecord.getGlobalDayStatus()) &&
                 oldRecord.getStatus().equals(newRecord.getStatus());
 
-        if (!isSame) {
-            System.out.println("Difference detected between:");
-            System.out.println("Old: " + oldRecord);
-            System.out.println("New: " + newRecord);
-        }
+
 
         return isSame;
     }

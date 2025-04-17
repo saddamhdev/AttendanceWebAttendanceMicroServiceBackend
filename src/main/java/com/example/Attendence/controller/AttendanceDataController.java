@@ -82,7 +82,7 @@ public class AttendanceDataController {
                     listData.add(attendanceData);
                 }
                 else{
-                    System.out.println("Already inserted bro");
+                   // System.out.println("Already inserted bro");
                 }
 
 
@@ -119,7 +119,7 @@ public class AttendanceDataController {
                     }
                 }
 
-                System.out.println(values.size()+"  "+values); // Print as a list
+               // System.out.println(values.size()+"  "+values); // Print as a list
                 AttendanceData ee=new AttendanceData();
                 ee.setEarlyExitReason(values.get(1));
                 ee.setEmployeeId(values.get(2));
@@ -139,8 +139,8 @@ public class AttendanceDataController {
                 ee.setUpdateStatus(values.get(13));
                 ee.setYear(values.get(14));
                // attendanceDataRepository.save(ee);
-                System.out.println(ee.toString());
-                System.out.println();
+              //  System.out.println(ee.toString());
+             //   System.out.println();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -183,7 +183,6 @@ public class AttendanceDataController {
     public List<AllEmployeeAttendanceData> getAttendanceEmployee(@RequestBody Map<String, String> requestData,HttpServletRequest request) {
         String  startDate = requestData.get("startDate");
         String endDate = requestData.get("endDate");
-
         return downloadService.getAllEmployeeAttendanceData(startDate, endDate,request.getHeader("Authorization"));
     }
 
@@ -222,8 +221,8 @@ public class AttendanceDataController {
     public ResponseEntity<String> updateAttendanceData(@RequestBody Map<String, List<AttendanceDataForFixedDay>> requestData) {
         List<AttendanceDataForFixedDay> newData = requestData.get("newData"); // Take first element
         List<AttendanceDataForFixedDay> oldData = requestData.get("oldData"); // Take first element
-        System.out.println(newData);
-        System.out.println(oldData);
+      //  System.out.println(newData);
+     //   System.out.println(oldData);
         return attendanceService.updateAttendanceData(newData, oldData);
     }
 

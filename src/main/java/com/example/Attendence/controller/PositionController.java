@@ -32,7 +32,7 @@ public class PositionController {
     private PositionRepository positionRepository;
     @PostMapping("/insert")
     public Position insertEmployee(@RequestBody Position employeeData) {
-        System.out.println("Received Data: " + employeeData); // Debugging
+      //  System.out.println("Received Data: " + employeeData); // Debugging
         // Save the employee data to the database
         Position localSetting = positionRepository.save(employeeData);
         // Return the saved employee data as a response
@@ -60,14 +60,14 @@ public class PositionController {
         {
             if(i==(Integer.parseInt(singleRowData.getPosition())-1))
             {
-                System.out.println(Integer.parseInt(singleRowData.getPosition())-1);
+               // System.out.println(Integer.parseInt(singleRowData.getPosition())-1);
                 outresult.add(new Employee(singleRowData.getIdNumber(),singleRowData.getName(),null,null,null,null,singleRowData.getPosition(),null,null,null,null));
                 // update according to singleRowData.getEmployeeId(),singleRowData.getName().
                 // Correct API call to get employee by ID & Name
                // repositoryManager.getRegistrationRepository().updatePosition(singleRowData.getFirstId(),singleRowData.getFirstName(),"1",singleRowData.getPosition());
-                System.out.println("number"+singleRowData.getIdNumber() +" "+singleRowData.getName());
+               // System.out.println("number"+singleRowData.getIdNumber() +" "+singleRowData.getName());
                 String idNumber = URLEncoder.encode(singleRowData.getIdNumber(), StandardCharsets.UTF_8);
-                System.out.println("number"+idNumber);
+              //  System.out.println("number"+idNumber);
                 String name = URLEncoder.encode(singleRowData.getName(), StandardCharsets.UTF_8);
                 String url = userServiceBaseUrl+"/updatePosition?idNumber="
                         + idNumber
@@ -78,7 +78,7 @@ public class PositionController {
                 // Use PUT request
                 ResponseEntity<String> response1 = restTemplate.exchange(url, HttpMethod.PUT, null, String.class);
 
-                System.out.println(response1.getBody());
+              //  System.out.println(response1.getBody());
 
                 break;
             }
@@ -93,7 +93,7 @@ public class PositionController {
                         + "&name=" + name
                         + "&status=1"  // Removed extra space before &newPosition
                         + "&newPosition=" + employeeList.get(i).getPosition();
-                System.out.println("Request URL: " + url);
+               // System.out.println("Request URL: " + url);
                 // Use PUT request
                 ResponseEntity<String> response1 = restTemplate.exchange(url, HttpMethod.PUT, null, String.class);
             }

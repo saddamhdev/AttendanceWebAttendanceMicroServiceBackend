@@ -27,12 +27,12 @@ public class localSettingController {
                 return ResponseEntity.badRequest().body("Error: Received null data.");
             }
 
-            System.out.println("Received Data: " + employeeData); // Debugging log
+           // System.out.println("Received Data: " + employeeData); // Debugging log
 
             localSettingRepository.save(employeeData);
             return ResponseEntity.ok("Successfully inserted");
         } catch (Exception e) {
-            System.err.println("Error inserting employee data: " + e.getMessage());
+           // System.err.println("Error inserting employee data: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Failed to insert data. Please try again.");
         }
@@ -40,7 +40,7 @@ public class localSettingController {
 
     @PostMapping("/update")
     public ResponseEntity<String> update(@RequestBody Map<String,String> requestData) {
-        System.out.println(requestData);
+       // System.out.println(requestData);
         Optional<LocalSetting> data=localSettingRepository.findById(requestData.get("id"));
         if(data.isPresent()){
             LocalSetting mm=data.get();
@@ -98,7 +98,7 @@ public class localSettingController {
                     }
                 }
 
-                System.out.println(values.size()+"  "+values); // Print as a list
+             //   System.out.println(values.size()+"  "+values); // Print as a list
           LocalSetting ee=new LocalSetting();
           ee.setCurrentTime(values.get(1));
           ee.setDesignation(values.get(2));
@@ -120,7 +120,7 @@ public class localSettingController {
     }
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteLocalSetting(@RequestBody LocalSetting localSetting) {
-        System.out.println("Received for deletion: " + localSetting); // ✅ Log input
+      //  System.out.println("Received for deletion: " + localSetting); // ✅ Log input
         //readCSVForLocalSetting("C:\\Users\\Saddam\\Downloads/LocalSetting.csv");
         try {
             if (localSetting == null) {

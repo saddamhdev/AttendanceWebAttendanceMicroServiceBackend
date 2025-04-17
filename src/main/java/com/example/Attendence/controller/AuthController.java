@@ -13,7 +13,7 @@ public class AuthController {
       //  String token = "generated-token-12345";
         String token = TimeBasedTokenUtil.generateToken();
         // Log the received status (optional)
-        System.out.println("Received status: " + token);
+       // System.out.println("Received status: " + token);
 
 
        // return ResponseEntity.ok("535");

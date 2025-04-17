@@ -24,7 +24,7 @@ public class globalSettingController {
     @PostMapping("/insert")
     public GlobalSetting insertEmployee(@RequestBody GlobalSetting employeeData) {
 
-        System.out.println("Received Data: " + employeeData); // Debugging
+       // System.out.println("Received Data: " + employeeData); // Debugging
         // Save the employee data to the database
         GlobalSetting globalSetting = globalSettingRepository.save(employeeData);
         // Return the saved employee data as a response
@@ -33,8 +33,8 @@ public class globalSettingController {
     @PostMapping("/update")
     public ResponseEntity<String> update(@RequestBody Map<String,String> employeeData) {
        // readCSVForGlobalSetting("C:\\Users\\Saddam\\Downloads/GlobalSetting.csv");
-        System.out.println("Received Data: " + employeeData); // Debugging
-        System.out.println("Received Data: " + employeeData.get("currentTime")); // Debugging
+       // System.out.println("Received Data: " + employeeData); // Debugging
+      //  System.out.println("Received Data: " + employeeData.get("currentTime")); // Debugging
         // Save the employee data to the database
        // GlobalSetting globalSetting = globalSettingRepository.save(employeeData);
         // Return the saved employee data as a response
@@ -84,7 +84,7 @@ public class globalSettingController {
                     }
                 }
 
-                System.out.println(values.size()+"  "+values); // Print as a list
+              //  System.out.println(values.size()+"  "+values); // Print as a list
                 GlobalSetting ee=new GlobalSetting();
                 ee.setCurrentTime(values.get(1));
                 ee.setEarlyMinute(values.get(2));
@@ -109,7 +109,7 @@ public class globalSettingController {
 
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteGlobalSetting(@RequestBody GlobalSetting globalSetting) {
-        System.out.println("Received for deletion: " + globalSetting); // ✅ Log input
+       // System.out.println("Received for deletion: " + globalSetting); // ✅ Log input
 
         try {
             if (globalSetting == null) {

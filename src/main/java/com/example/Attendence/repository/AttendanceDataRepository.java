@@ -2,6 +2,7 @@ package com.example.Attendence.repository;
 
 import com.example.Attendence.model.AttendanceData;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -20,8 +21,10 @@ public interface AttendanceDataRepository extends MongoRepository<AttendanceData
     List<AttendanceData> findByStatus(String status);
     // i want a list according to status and (first entryDate and second entryDate . in this period data)
 // Find attendance records within a date range and a specific status
-    List<AttendanceData> findByEmployeeIdAndUpdateStatusAndEntryDateBetween(
-            String employeeId, String status, String startDate, String endDate);
+    @Query("{ 'employeeId': ?0, 'updateStatus': ?1, 'entryDate': { $gte: ?2, $lte: ?3 } }")
+    List<AttendanceData> findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(
+            String employeeId, String updateStatus, String startDate, String endDate);
+
     List<AttendanceData> findByUpdateStatusAndEntryDateBetween(
              String status, String startDate, String endDate);
 

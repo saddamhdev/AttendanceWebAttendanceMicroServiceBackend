@@ -1129,11 +1129,12 @@ public class UserAtAGlanceService {
         totaltimecc = Duration.ZERO;
         timeInSecond=0;
         timeInSecondOfOutTime=0;
-        List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(employeeId,"1",startDate1,endDate1);
+        List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(employeeId,"1",startDate1,endDate1);
+
         employeeList=userService.employeeList(header);
 
-        if (dataList.size() > 0) {
-            System.out.println("UserAtAGlance");
+        if (!dataList.isEmpty()) {
+           // System.out.println("UserAtAGlance");
             dataList.forEach(e -> {
                 // Define the date format
                 DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -1146,7 +1147,7 @@ public class UserAtAGlanceService {
                     f.printStackTrace(); // Handle parsing exception
                 }
                 if (databaseDate != null) {
-                    System.out.println(databaseDate+" "+startDate+" "+endDate);
+                  //  System.out.println(databaseDate+" "+startDate+" "+endDate);
                     if (((databaseDate.equals(startDate) || databaseDate.equals(endDate))&& selectedparsonglance.equals(e.getName()) )||
                             (databaseDate.isAfter(startDate) && databaseDate.isBefore(endDate)&& selectedparsonglance.equals(e.getName()))) {
 
@@ -1163,13 +1164,13 @@ public class UserAtAGlanceService {
                                     Duration durationBetweenEntryExit = Duration.between(e.getEntryTime(), e.getExitTime());
                                     timeInSecond=timeInSecond+durationBetweenEntryExit.toHoursPart()*60L*60L+durationBetweenEntryExit.toMinutesPart()*60L;
                                     durationc = durationc.plus(durationBetweenEntryExit);
-                                    System.out.println("Current total duration (seconds): " + durationc.getSeconds());
+                                  //  System.out.println("Current total duration (seconds): " + durationc.getSeconds());
                                     presentdayc++;
 
                                     long hours = durationBetweenEntryExit.toHoursPart();
                                     long minutes = durationBetweenEntryExit.toMinutesPart();
                                     int settingHours = returnSettingTotalHour(e.getEmployeeId(), e.getName(), e.getEntryDate());
-                                    System.out.println(settingHours);
+                                   // System.out.println(settingHours);
 
                                     if (hours < settingHours) {
                                         shorttimec++;
@@ -1223,10 +1224,10 @@ public class UserAtAGlanceService {
                                         String fractionalPart = matcher.group(2);
                                         timeInSecondOfOutTime=timeInSecondOfOutTime+Long.parseLong(integerPart)*60L*60L+Long.parseLong(fractionalPart)*60L;
 
-                                        System.out.println("Integer Part: " + integerPart);
-                                        System.out.println("Fractional Part: " + fractionalPart);
+                                       // System.out.println("Integer Part: " + integerPart);
+                                        //System.out.println("Fractional Part: " + fractionalPart);
                                     } else {
-                                        System.out.println("The input is not a valid decimal number.");
+                                      //  System.out.println("The input is not a valid decimal number.");
                                     }
                                 }
 
@@ -1249,7 +1250,7 @@ public class UserAtAGlanceService {
 
                     } else {
                         // Your code for handling the case when the databaseDate is outside the range
-                        System.out.println("The date is outside the range.");
+                      //  System.out.println("The date is outside the range.");
                     }
                 }
 
@@ -1278,17 +1279,17 @@ public class UserAtAGlanceService {
             userAtAGlance.setTotalTime(totaltimecc.toHours() + ":" + totaltimecc.toMinutesPart());
 
 
-            System.out.println("TOTAL HOURS " + durationc.toHoursPart() + " TOTAL MINUTES " + durationc.toMinutesPart() + " total days " + presentdayc);
+           // System.out.println("TOTAL HOURS " + durationc.toHoursPart() + " TOTAL MINUTES " + durationc.toMinutesPart() + " total days " + presentdayc);
 
             if (presentdayc != 0) {
                 long totalSeconds =  timeInSecond;
                 long averageSeconds = totalSeconds / presentdayc;
-                System.out.println("Avg second " + totalSeconds);
+               // System.out.println("Avg second " + totalSeconds);
                 durationc = Duration.ofSeconds(averageSeconds);
                 totalextradurationc=Duration.ofSeconds(totalExtraTime);
             }
 
-            System.out.println("Avg hours " + durationc.toHoursPart());
+          //  System.out.println("Avg hours " + durationc.toHoursPart());
 
             //avgtime.setText(durationc.toHoursPart() + ":" + durationc.toMinutesPart());
             userAtAGlance.setAvgTime(durationc.toHoursPart() + ":" + durationc.toMinutesPart());
@@ -1319,7 +1320,7 @@ public class UserAtAGlanceService {
             userAtAGlance.setTotalExtraTime(totalextradurationc.toHoursPart() + ":" + totalextradurationc.toMinutesPart());
         }
         else{
-            System.out.println("Data Not Found");
+           // System.out.println("Data Not Found");
         }
 
         return userAtAGlance;

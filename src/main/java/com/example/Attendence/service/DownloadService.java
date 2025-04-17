@@ -232,6 +232,7 @@ public class DownloadService {
     }
 
     public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1,String header){
+
         List<AllEmployeeAttendanceData> resultList=new ArrayList<>();
        // List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatusAndEntryDateBetween("1",startDate1,endDate1);
         employeeList=userService.employeeList(header);
@@ -241,25 +242,14 @@ public class DownloadService {
         ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
         ChronoLocalDate endDate=LocalDate.parse(endDate1, formatter);
 
-       /* Map<String, List<AttendanceData>> attendanceDataMap =
-                attendanceDataRepository.findByUpdateStatusAndEntryDateBetween("1", startDate1, endDate1)
-                        .stream()
-                        .collect(Collectors.groupingBy(AttendanceData::getEmployeeId));
-
-
-        attendanceDataMap.forEach((employeeId, attendanceList) -> {
-            System.out.println("Employee: " + employeeId);
-            attendanceList.forEach(System.out::println);
-        });*/
-
 
             employeeList.parallelStream().forEach(f->{
-                List<AttendanceData>   dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateBetween(f.getIdNumber(),"1",startDate1,endDate1);
+                List<AttendanceData>   dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(f.getIdNumber(),"1",startDate1,endDate1);
                // List<AttendanceData>  dataList=attendanceDataMap.get(f.getIdNumber());
                 // If dataList is null or empty, handle the case
                 if (dataList == null || dataList.isEmpty()) {
                     // Log the case where no data is found for this employee
-                    System.out.println("No attendance data found for employee: " + f.getIdNumber());
+                  //  System.out.println("No attendance data found for employee: " + f.getIdNumber());
                     return; // Skip processing for this employee
                 }
 
@@ -270,7 +260,9 @@ public class DownloadService {
                 timeInSecond.set(0L);
                 result.set(false);
                 timeInSecondOfOutTime.set(0L);
+
                 dataList.forEach(e->{
+
                     DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
                     databaseDate.set(LocalDate.now()); // Initialize with a default value
                     // Convert the string to LocalDate
@@ -282,16 +274,20 @@ public class DownloadService {
                     }
                     if (databaseDate != null) {
                        // System.out.println(databaseDate+" "+startDate+" "+endDate);
-                        if (((databaseDate.equals(startDate) || databaseDate.equals(endDate))&& f.getName().equals(e.getName()) )||
-                                (databaseDate.get().isAfter(startDate) && databaseDate.get().isBefore(endDate)&& f.getName().equals(e.getName()))) {
-
+                         LocalDate date = databaseDate.get();
+                        if (!date.isBefore(startDate) && !date.isAfter(endDate) && f.getName().equals(e.getName())) {
+                           // check join date
                             LocalDate databaseDate1 = LocalDate.parse(f.getJoinDate(), dateFormatter);
                             if ((e.getName().equals(f.getName()) && databaseDate1.isBefore(databaseDate.get())) || (e.getName().equals(f.getName()) && databaseDate1.isEqual(databaseDate.get()))) {
                                 result.set(true);
+
+
                                 if(!"Holiday".equals(e.getStatus()))
                                 {
 
                                     officedayc.set(officedayc.get()+1);
+
+
                                 }
 
                                 if("Present".equals(e.getStatus()))
@@ -388,22 +384,17 @@ public class DownloadService {
                                 if("Leave".equals(e.getStatus()))
                                 {
 
-
-
                                     leavedayc.set(leavedayc.get()+1);
                                 }
 
                                 if("Absent".equals(e.getStatus()))
                                 {
 
-
                                     absentdayc.set(absentdayc.get()+1);
                                 }
 
-                                if("Holyday".equals(e.getStatus()))
+                                if("Holiday".equals(e.getStatus()))
                                 {
-
-
 
                                     holydayc.set(holydayc.get()+1);
                                 }
@@ -420,15 +411,9 @@ public class DownloadService {
 
                 if(result.get())
                 {
-                    // officeday.setText(Integer.toString(officedayc));
-                    // presentday.setText(Integer.toString(presentdayc));
+
                     intotaltimec.set(Duration.ofSeconds(timeInSecond.get()));
 
-                    // outtime.setText(Double.toString(outtimec));
-
-                    // Convert decimal hours to seconds
-
-                    // Duration outT=Duration.ofSeconds(timeInSecondOfOutTime);
 
                     // Create a Duration object
                     Duration outtimeduration = Duration.ofSeconds(timeInSecondOfOutTime.get());
@@ -436,8 +421,7 @@ public class DownloadService {
 
                     totaltimecc.set(intotaltimec.get().plus(outtimeduration));
 
-                    // intotaltime.setText(intotaltimec.toHours()+":"+ intotaltimec.toMinutesPart());
-                    // totaltime.setText(totaltimecc.toHours()+":"+ totaltimecc.toMinutesPart());
+
 
                     if(presentdayc.get()!=0)
                     {
@@ -472,9 +456,6 @@ public class DownloadService {
                             intotaltimec.get().toHours()+":"+ intotaltimec.get().toMinutesPart(),
                             totaltimecc.get().toHours()+":"+ totaltimecc.get().toMinutesPart()));
                 }
-
-
-
 
             });
 
