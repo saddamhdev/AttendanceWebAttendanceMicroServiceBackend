@@ -24,8 +24,10 @@ import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -1089,362 +1091,139 @@ public class UserAtAGlanceService {
         }
     }
 
-    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1,String header) {
-      UserAtAGlance userAtAGlance=new UserAtAGlance();
-      userAtAGlance.setEmployeeId(employeeId);
-      userAtAGlance.setEmployeeName(employeeName);
-      userAtAGlance.setStartDate(startDate1);
-      userAtAGlance.setEndDate(endDate1);
-       String selectedparsonglance=employeeName;
-        // Define the formatter
+    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1, String header) {
+        UserAtAGlance userAtAGlance = new UserAtAGlance();
+        userAtAGlance.setEmployeeId(employeeId);
+        userAtAGlance.setEmployeeName(employeeName);
+        userAtAGlance.setStartDate(startDate1);
+        userAtAGlance.setEndDate(endDate1);
+
+        String selectedPerson = employeeName;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-
-        // Convert to ChronoLocalDate
         ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
-        ChronoLocalDate endDate=LocalDate.parse(endDate1, formatter);
+        ChronoLocalDate endDate = LocalDate.parse(endDate1, formatter);
 
-        // Initialize counters
-        officedayc = 0;
-        presentdayc = 0;
-        avgtimec = 0;
-        leavedayc = 0;
-        absentdayc = 0;
-        holydayc = 0;
-        shorttimec = 0;
-        regulartimec = 0;
-        extratimec = 0;
-        intimec = 0;
-        latetimec = 0;
-        totallatetimec = 0;
-        okc = 0;
-        earlytimec = 0;
-        totalextratimec = 0;
-        durationc = Duration.ZERO;
-        totallatedurationc = Duration.ZERO;
-        totalextradurationc = Duration.ZERO;
-        outtimec = 0;totalExtraTime=0;
-        totaltimecc = Duration.ZERO;
-        intotaltimec = Duration.ZERO;
-        outtimec = 0;
-        totaltimecc = Duration.ZERO;
-        timeInSecond=0;
-        timeInSecondOfOutTime=0;
-        List<AttendanceData> dataList=attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(employeeId,"1",startDate1,endDate1);
+        resetCounters();
 
-        employeeList=userService.employeeList(header);
+        List<AttendanceData> dataList = attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(employeeId, "1", startDate1, endDate1);
+        employeeList = userService.employeeList(header);
 
         if (!dataList.isEmpty()) {
-           // System.out.println("UserAtAGlance");
-            dataList.forEach(e -> {
-                // Define the date format
-                DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-                databaseDate=null;
-                // Convert the string to LocalDate
+            for (AttendanceData e : dataList) {
+                LocalDate entryDate;
                 try {
-                    databaseDate = LocalDate.parse(e.getEntryDate(), dateFormatter);
-                    //System.out.println("Converted LocalDate: " + databaseDate);
-                } catch (DateTimeParseException f) {
-                    f.printStackTrace(); // Handle parsing exception
+                    entryDate = LocalDate.parse(e.getEntryDate(), formatter);
+                } catch (DateTimeParseException ex) {
+                    continue;
                 }
-                if (databaseDate != null) {
-                  //  System.out.println(databaseDate+" "+startDate+" "+endDate);
-                    if (((databaseDate.equals(startDate) || databaseDate.equals(endDate))&& selectedparsonglance.equals(e.getName()) )||
-                            (databaseDate.isAfter(startDate) && databaseDate.isBefore(endDate)&& selectedparsonglance.equals(e.getName()))) {
 
-                        employeeList.forEach(g->{
-                            LocalDate databaseDate1 = LocalDate.parse(g.getJoinDate(), dateFormatter);
-                            if((e.getName().equals(g.getName())&& databaseDate1.isBefore(databaseDate)) || (e.getName().equals(g.getName())&& databaseDate1.isEqual(databaseDate) )){
+                if (!isDateInRange(entryDate, startDate, endDate) || !selectedPerson.equals(e.getName())) continue;
 
+                for (Employee g : employeeList) {
+                    LocalDate joinDate = LocalDate.parse(g.getJoinDate(), formatter);
+                    if (!g.getName().equals(e.getName()) || joinDate.isAfter(entryDate)) continue;
 
-                                if (!"Holiday".equals(e.getStatus())) {
-                                    officedayc++;
-                                }
+                    String empId = e.getEmployeeId();
+                    String empName = e.getName();
+                    String entryDay = e.getEntryDate();
+                    LocalTime entryTime = e.getEntryTime().toLocalTime();
+                    LocalTime exitTime = e.getExitTime().toLocalTime();
 
-                                if ("Present".equals(e.getStatus())) {
-                                    Duration durationBetweenEntryExit = Duration.between(e.getEntryTime(), e.getExitTime());
-                                    timeInSecond=timeInSecond+durationBetweenEntryExit.toHoursPart()*60L*60L+durationBetweenEntryExit.toMinutesPart()*60L;
-                                    durationc = durationc.plus(durationBetweenEntryExit);
-                                  //  System.out.println("Current total duration (seconds): " + durationc.getSeconds());
-                                    presentdayc++;
+                    String status = e.getStatus();
 
-                                    long hours = durationBetweenEntryExit.toHoursPart();
-                                    long minutes = durationBetweenEntryExit.toMinutesPart();
-                                    int settingHours = returnSettingTotalHour(e.getEmployeeId(), e.getName(), e.getEntryDate());
-                                   // System.out.println(settingHours);
+                    if (!"Holiday".equals(status)) officedayc++;
+                    if ("Present".equals(status)) {
+                        Duration entryExitDuration = Duration.between(e.getEntryTime(), e.getExitTime());
+                        timeInSecond += entryExitDuration.toHoursPart() * 3600L + entryExitDuration.toMinutesPart() * 60L;
+                        durationc = durationc.plus(entryExitDuration);
+                        presentdayc++;
 
-                                    if (hours < settingHours) {
-                                        shorttimec++;
-                                    } else if (hours > settingHours || (hours == settingHours && minutes > 0)) {
-                                        extratimec++;
-                                    } else {
-                                        regulartimec++;
-                                    }
+                        int settingHours = returnSettingTotalHour(empId, empName, entryDay);
+                        if (entryExitDuration.toHours() < settingHours) shorttimec++;
+                        else if (entryExitDuration.toHours() > settingHours || entryExitDuration.toMinutesPart() > 0) extratimec++;
+                        else regulartimec++;
 
-                                    LocalTime lateThreshold = LocalTime.of(returnSettingStartHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), returnGlobalSettingLateMinute(e.getEntryDate()) + 1);
+                        LocalTime startThreshold = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnGlobalSettingLateMinute(entryDay) + 1);
+                        if (entryTime.isBefore(startThreshold)) intimec++;
 
-                                    if (e.getEntryTime().toLocalTime().isBefore(lateThreshold)) {
-                                        intimec++;
-                                    }
+                        LocalTime lateLimit = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnGlobalSettingLateMinute(entryDay));
+                        if (entryTime.isAfter(lateLimit)) {
+                            latetimec++;
+                            LocalTime actualStart = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnSettingStartMinute(empId, empName, entryDay));
+                            Duration lateDuration = Duration.between(actualStart, entryTime);
+                            totallatedurationc = totallatedurationc.plus(lateDuration);
+                        }
 
-                                    lateThreshold = LocalTime.of(returnSettingStartHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), returnGlobalSettingLateMinute(e.getEntryDate()));
-                                    if (e.getEntryTime().toLocalTime().isAfter(lateThreshold)) {
-                                        latetimec++;
-                                        LocalTime lateThreshold1 = LocalTime.of(returnSettingStartHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), returnSettingStartMinute(e.getEmployeeId(), e.getName(), e.getEntryDate()));
-                                        Duration lateDuration = Duration.between(lateThreshold1, e.getEntryTime().toLocalTime());
-                                        totallatedurationc = totallatedurationc.plus(lateDuration);
-                                    }
+                        String[] endTimeData = subtractHourMinute(returnSettingEndHour(empId, empName, entryDay), returnGlobalSettingEarlyMinute(entryDay));
+                        LocalTime earlyExitLimit = LocalTime.of(Integer.parseInt(endTimeData[0]), Integer.parseInt(endTimeData[1]));
+                        if (exitTime.isBefore(earlyExitLimit)) earlytimec++;
 
-                                    String[] data = subtractHourMinute(returnSettingEndHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), returnGlobalSettingEarlyMinute(e.getEntryDate()));
-                                    LocalTime exitThreshold = LocalTime.of(Integer.parseInt(data[0]), Integer.parseInt(data[1]));
-                                    if (e.getExitTime().toLocalTime().isBefore(exitThreshold)) {
-                                        earlytimec++;
-                                    }
-
-                                    exitThreshold = LocalTime.of(returnSettingEndHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), returnSettingEndMinute(e.getEmployeeId(), e.getName(), e.getEntryDate()));
-                                    if (e.getExitTime().toLocalTime().isAfter(exitThreshold)) {
-                                        // 15 minute calculation after end time
-                                        LocalTime	exitThreshold1 = LocalTime.of(returnSettingEndHour(e.getEmployeeId(), e.getName(), e.getEntryDate()), 15+returnSettingEndMinute(e.getEmployeeId(), e.getName(), e.getEntryDate()));
-                                        if (e.getExitTime().toLocalTime().isAfter(exitThreshold1)){
-                                            Duration extraDuration = Duration.between(exitThreshold, e.getExitTime().toLocalTime());
-                                            totalExtraTime=totalExtraTime+extraDuration.toHoursPart()*60L*60L+extraDuration.toMinutesPart()*60L;
-                                            //totalextradurationc = totalextradurationc.plus(extraDuration);
-                                            Duration ff=	Duration.ofSeconds(totalExtraTime);
-
-                                        }
-
-                                    }
-
-
-                                    String regex = "(\\d+)\\.(\\d+)";
-
-                                    Pattern pattern = Pattern.compile(regex);
-                                    Matcher matcher = pattern.matcher(e.getOuttime());
-                                    if (matcher.matches()) {
-                                        String integerPart = matcher.group(1);
-                                        String fractionalPart = matcher.group(2);
-                                        timeInSecondOfOutTime=timeInSecondOfOutTime+Long.parseLong(integerPart)*60L*60L+Long.parseLong(fractionalPart)*60L;
-
-                                       // System.out.println("Integer Part: " + integerPart);
-                                        //System.out.println("Fractional Part: " + fractionalPart);
-                                    } else {
-                                      //  System.out.println("The input is not a valid decimal number.");
-                                    }
-                                }
-
-                                if ("Leave".equals(e.getStatus())) {
-                                    leavedayc++;
-                                }
-
-                                if ("Absent".equals(e.getStatus())) {
-                                    absentdayc++;
-                                }
-
-                                if ("Holiday".equals(e.getStatus())) {
-                                    holydayc++;
-                                }
-
+                        LocalTime actualEnd = LocalTime.of(returnSettingEndHour(empId, empName, entryDay), returnSettingEndMinute(empId, empName, entryDay));
+                        if (exitTime.isAfter(actualEnd)) {
+                            LocalTime extendedEnd = actualEnd.plusMinutes(15);
+                            if (exitTime.isAfter(extendedEnd)) {
+                                Duration extraDuration = Duration.between(actualEnd, exitTime);
+                                totalExtraTime += extraDuration.toHoursPart() * 3600L + extraDuration.toMinutesPart() * 60L;
                             }
-                        });
+                        }
 
-                        // Your code for handling the case when the databaseDate is within the range
-
-                    } else {
-                        // Your code for handling the case when the databaseDate is outside the range
-                      //  System.out.println("The date is outside the range.");
+                        Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+)").matcher(e.getOuttime());
+                        if (matcher.matches()) {
+                            timeInSecondOfOutTime += Long.parseLong(matcher.group(1)) * 3600L + Long.parseLong(matcher.group(2)) * 60L;
+                        }
                     }
+
+                    if ("Leave".equals(status)) leavedayc++;
+                    else if ("Absent".equals(status)) absentdayc++;
+                    else if ("Holiday".equals(status)) holydayc++;
                 }
+            }
 
-            });
-
-            //officeday.setText(Integer.toString(officedayc));
             userAtAGlance.setOfficeDay(officedayc);
-           // presentday.setText(Integer.toString(presentdayc));
             userAtAGlance.setTotalPresent(presentdayc);
 
             intotaltimec = Duration.ofSeconds(timeInSecond);
-            //
-            Duration outT=Duration.ofSeconds(timeInSecondOfOutTime);
-           // outtime.setText(outT.toHours() + ":" + outT.toMinutesPart());
-            userAtAGlance.setOfficeOutTime(outT.toHours() + ":" + outT.toMinutesPart());
-
-            long seconds = (long) (outtimec * 60 * 60);
-            //Duration outtimeduration = Duration.ofSeconds(seconds+timeInSecond);
-            long gg=timeInSecondOfOutTime+timeInSecond;
-            totaltimecc = Duration.ofSeconds(gg);
-
-           // intotaltime.setText(intotaltimec.toHours() + ":" + intotaltimec.toMinutesPart());
+            Duration outDuration = Duration.ofSeconds(timeInSecondOfOutTime);
+            userAtAGlance.setOfficeOutTime(outDuration.toHours() + ":" + outDuration.toMinutesPart());
+            totaltimecc = Duration.ofSeconds(timeInSecond + timeInSecondOfOutTime);
             userAtAGlance.setOfficeInTime(intotaltimec.toHours() + ":" + intotaltimec.toMinutesPart());
-
-           // totaltime.setText(totaltimecc.toHours() + ":" + totaltimecc.toMinutesPart());
             userAtAGlance.setTotalTime(totaltimecc.toHours() + ":" + totaltimecc.toMinutesPart());
 
-
-           // System.out.println("TOTAL HOURS " + durationc.toHoursPart() + " TOTAL MINUTES " + durationc.toMinutesPart() + " total days " + presentdayc);
-
             if (presentdayc != 0) {
-                long totalSeconds =  timeInSecond;
-                long averageSeconds = totalSeconds / presentdayc;
-               // System.out.println("Avg second " + totalSeconds);
+                long averageSeconds = timeInSecond / presentdayc;
                 durationc = Duration.ofSeconds(averageSeconds);
-                totalextradurationc=Duration.ofSeconds(totalExtraTime);
+                totalextradurationc = Duration.ofSeconds(totalExtraTime);
             }
 
-          //  System.out.println("Avg hours " + durationc.toHoursPart());
-
-            //avgtime.setText(durationc.toHoursPart() + ":" + durationc.toMinutesPart());
             userAtAGlance.setAvgTime(durationc.toHoursPart() + ":" + durationc.toMinutesPart());
-
-            //leaveday.setText(Integer.toString(leavedayc));
             userAtAGlance.setLeave(leavedayc);
-            //absentday.setText(Integer.toString(absentdayc));
             userAtAGlance.setAbsent(absentdayc);
-            //holyday.setText(Integer.toString(holydayc));
             userAtAGlance.setHoliday(holydayc);
-            //shorttime.setText(Integer.toString(shorttimec));
             userAtAGlance.setShortTime(shorttimec);
-            //regulartime.setText(Integer.toString(regulartimec));
             userAtAGlance.setRegularTime(regulartimec);
-           // extratime.setText(Integer.toString(extratimec));
             userAtAGlance.setExtraTime(extratimec);
-            //intime.setText(Integer.toString(intimec));
             userAtAGlance.setEntryInTime(intimec);
-            //latetime.setText(Integer.toString(latetimec));
             userAtAGlance.setEntryLate(latetimec);
-            //totallatetime.setText(totallatedurationc.toHoursPart() + ":" + totallatedurationc.toMinutesPart());
-            userAtAGlance.setTotalLate(totallatedurationc.toHoursPart() + ":" + totallatedurationc.toMinutesPart());
-            //ok.setText(Integer.toString(presentdayc - earlytimec));
-            userAtAGlance.setExitOk(presentdayc - earlytimec);
-            //earlytime.setText(Integer.toString(earlytimec));
-            userAtAGlance.setExitEarly(earlytimec);
-            //totalextratime.setText(totalextradurationc.toHoursPart() + ":" + totalextradurationc.toMinutesPart());
-            userAtAGlance.setTotalExtraTime(totalextradurationc.toHoursPart() + ":" + totalextradurationc.toMinutesPart());
-        }
-        else{
-           // System.out.println("Data Not Found");
         }
 
         return userAtAGlance;
     }
-    public int returnSettingEndMinute(String id, String name,String insertDataDate1)
-    {
-        List<LocalSetting> localSettingdata=localSettingRepository.findAllByStatus("1");
-        int hour = 0; // Default hour value
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = localSettingdata.size() - 1; i >= 0; i--) {
-            if (id.equals(localSettingdata.get(i).getEmployeeId()) && name.equals(localSettingdata.get(i).getName())) {
-                try {
-                    Date insertDataDate = dateFormat.parse(insertDataDate1);
-                    Date startDate = dateFormat.parse(localSettingdata.get(i).getFormattedBirthDate());
-                    Date endDate = dateFormat.parse(localSettingdata.get(i).getFormattedDeathDate());
-
-                    // Check if insertDataDate is between startDate and endDate (inclusive)
-                    if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                            (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                        hour = Integer.parseInt(localSettingdata.get(i).getEndMinute());
-                        break;
-                    }
-                } catch (java.text.ParseException e) {
-                    // Handle parsing exception appropriately, e.g., logging
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        return hour;
+    // Utility: reset all counters at the start
+    private void resetCounters() {
+        officedayc = presentdayc = avgtimec = leavedayc = absentdayc = holydayc = shorttimec =
+                regulartimec = extratimec = intimec = latetimec = totallatetimec = okc = earlytimec =
+                        totalextratimec  = 0;
+        outtimec=0.0;
+        totalExtraTime = 0;
+        durationc = totallatedurationc = totalextradurationc = totaltimecc = intotaltimec = Duration.ZERO;
+        timeInSecond = timeInSecondOfOutTime = 0;
     }
-    public int returnGlobalSettingEarlyMinute(String insertDataDate1)
-    {
-        List<GlobalSetting> globalSettingdata=globalSettingRepository.findAllByStatus("1");
-        int hour = 9; // Default hour value
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = globalSettingdata.size() - 1; i >= 0; i--) {
-
-            try {
-                Date insertDataDate = dateFormat.parse(insertDataDate1);
-                Date startDate = dateFormat.parse(globalSettingdata.get(i).getFormattedBirthDate());
-                Date endDate = dateFormat.parse(globalSettingdata.get(i).getFormattedDeathDate());
-
-                // Check if insertDataDate is between startDate and endDate (inclusive)
-                if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                        (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                    hour = Integer.parseInt(globalSettingdata.get(i).getEarlyMinute());
-                    break;
-                }
-            } catch (java.text.ParseException e) {
-                // Handle parsing exception appropriately, e.g., logging
-                e.printStackTrace();
-            }
-        }
-
-
-
-        return hour;
+    private boolean isDateInRange(LocalDate date, ChronoLocalDate start, ChronoLocalDate end) {
+        return (date.equals(start) || date.equals(end)) || (date.isAfter(start) && date.isBefore(end));
     }
-    public int returnSettingStartMinute(String id, String name,String insertDataDate1)
-    {
-        List<LocalSetting> localSettingdata=localSettingRepository.findAllByStatus("1");
-        int hour = 9; // Default hour value
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = localSettingdata.size() - 1; i >= 0; i--) {
-            if (id.equals(localSettingdata.get(i).getEmployeeId()) && name.equals(localSettingdata.get(i).getName())) {
-                try {
-                    Date insertDataDate = dateFormat.parse(insertDataDate1);
-                    Date startDate = dateFormat.parse(localSettingdata.get(i).getFormattedBirthDate());
-                    Date endDate = dateFormat.parse(localSettingdata.get(i).getFormattedDeathDate());
-
-                    // Check if insertDataDate is between startDate and endDate (inclusive)
-                    if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                            (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                        hour = Integer.parseInt(localSettingdata.get(i).getStartMinute());
-                        break;
-                    }
-                } catch (java.text.ParseException e) {
-                    // Handle parsing exception appropriately, e.g., logging
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        return hour;
-    }
-    public int returnSettingEndHour(String id, String name,String insertDataDate1)
-    {
-        List<LocalSetting> localSettingdata=localSettingRepository.findAllByStatus("1");
-        int hour = 17; // Default hour value
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = localSettingdata.size() - 1; i >= 0; i--) {
-            if (id.equals(localSettingdata.get(i).getEmployeeId()) && name.equals(localSettingdata.get(i).getName())) {
-                try {
-                    Date insertDataDate = dateFormat.parse(insertDataDate1);
-                    Date startDate = dateFormat.parse(localSettingdata.get(i).getFormattedBirthDate());
-                    Date endDate = dateFormat.parse(localSettingdata.get(i).getFormattedDeathDate());
-
-                    // Check if insertDataDate is between startDate and endDate (inclusive)
-                    if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                            (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                        hour = Integer.parseInt(localSettingdata.get(i).getEndHours());
-                        break;
-                    }
-                } catch (java.text.ParseException e) {
-                    // Handle parsing exception appropriately, e.g., logging
-                    e.printStackTrace();
-                }
-            }
-        }
-
-
-        return hour;
-    }
     public static String[] subtractHourMinute(int hour, int minutesToSubtract) {
         // Convert everything to minutes for easier calculation
         int totalMinutes = hour * 60 ;
@@ -1465,94 +1244,226 @@ public class UserAtAGlanceService {
         result[1] = String.valueOf(resultingMinute);
         return result;
     }
-    public int returnGlobalSettingLateMinute(String insertDataDate1)
-    {
-        List<GlobalSetting> globalSettingdata=globalSettingRepository.findAllByStatus("1");
-        int hour = 9; // Default hour value
+    public int returnGlobalSettingLateMinute(String insertDataDateStr) {
+        int defaultMinute = 9;
 
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = globalSettingdata.size() - 1; i >= 0; i--) {
-
-            try {
-                Date insertDataDate = dateFormat.parse(insertDataDate1);
-                Date startDate = dateFormat.parse(globalSettingdata.get(i).getFormattedBirthDate());
-                Date endDate = dateFormat.parse(globalSettingdata.get(i).getFormattedDeathDate());
-
-                // Check if insertDataDate is between startDate and endDate (inclusive)
-                if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                        (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                    hour = Integer.parseInt(globalSettingdata.get(i).getLateMinute());
-                    break;
-                }
-            } catch (java.text.ParseException e) {
-                // Handle parsing exception appropriately, e.g., logging
-                e.printStackTrace();
-            }
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // expects format: yyyy-MM-dd
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultMinute;
         }
 
-
-
-        return hour;
-    }
-    public int returnSettingStartHour(String id, String name,String insertDataDate1)
-    {
-        List<LocalSetting> localSettingdata=localSettingRepository.findAllByStatus("1");
-        int hour = 9; // Default hour value
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = localSettingdata.size() - 1; i >= 0; i--) {
-            if (id.equals(localSettingdata.get(i).getEmployeeId()) && name.equals(localSettingdata.get(i).getName())) {
-                try {
-                    Date insertDataDate = dateFormat.parse(insertDataDate1);
-                    Date startDate = dateFormat.parse(localSettingdata.get(i).getFormattedBirthDate());
-                    Date endDate = dateFormat.parse(localSettingdata.get(i).getFormattedDeathDate());
-
-                    // Check if insertDataDate is between startDate and endDate (inclusive)
-                    if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                            (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                        hour = Integer.parseInt(localSettingdata.get(i).getStartHours());
-                        break;
+        return globalSettingRepository.findAllByStatus("1").stream()
+                .sorted(Comparator.comparing(GlobalSetting::getFormattedBirthDate).reversed()) // reverse for latest first
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getLateMinute());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
                     }
-                } catch (java.text.ParseException e) {
-                    // Handle parsing exception appropriately, e.g., logging
-                    e.printStackTrace();
-                }
-            }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultMinute);
+    }
+
+    public int returnGlobalSettingEarlyMinute(String insertDataDateStr) {
+        int defaultMinute = 9;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // expects format "yyyy-MM-dd"
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultMinute;
         }
 
+        return globalSettingRepository.findAllByStatus("1").stream()
+                .sorted(Comparator.comparing(GlobalSetting::getFormattedBirthDate).reversed())
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
 
-        return hour;
-    }
-    public int returnSettingTotalHour(String id, String name,String insertDataDate1)
-    {
-       List<LocalSetting> localSettingdata=localSettingRepository.findAllByStatus("1");
-        int hour = 8; // Default hour value
-
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-
-        for (int i = localSettingdata.size() - 1; i >= 0; i--) {
-            if (id.equals(localSettingdata.get(i).getEmployeeId()) && name.equals(localSettingdata.get(i).getName())) {
-                try {
-                    Date insertDataDate = dateFormat.parse(insertDataDate1);
-                    Date startDate = dateFormat.parse(localSettingdata.get(i).getFormattedBirthDate());
-                    Date endDate = dateFormat.parse(localSettingdata.get(i).getFormattedDeathDate());
-
-                    // Check if insertDataDate is between startDate and endDate (inclusive)
-                    if ((insertDataDate.equals(startDate) || insertDataDate.equals(endDate)) ||
-                            (insertDataDate.after(startDate) && insertDataDate.before(endDate))) {
-                        hour = Integer.parseInt(localSettingdata.get(i).getTotalHours());
-                        break;
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getEarlyMinute());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
                     }
-                } catch (java.text.ParseException e) {
-                    // Handle parsing exception appropriately, e.g., logging
-                    e.printStackTrace();
-                }
-            }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultMinute);
+    }
+
+    public int returnSettingStartMinute(String id, String name, String insertDataDateStr) {
+        int defaultMinute = 9;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // expects "yyyy-MM-dd"
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultMinute;
         }
 
+        return localSettingRepository.findAllByStatus("1").stream()
+                .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
+                .sorted(Comparator.comparing(LocalSetting::getFormattedBirthDate).reversed())
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
 
-        return hour;
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getStartMinute());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultMinute);
     }
+
+    public int returnSettingEndHour(String id, String name, String insertDataDateStr) {
+        int defaultHour = 17;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr);
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultHour;
+        }
+
+        return localSettingRepository.findAllByStatus("1").stream()
+                .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
+                .sorted(Comparator.comparing(LocalSetting::getFormattedBirthDate).reversed()) // assume dates are in "yyyy-MM-dd"
+                .map(setting -> {
+                    try {
+                        LocalDate startDate = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate endDate = LocalDate.parse(setting.getFormattedDeathDate());
+
+                        if (!insertDate.isBefore(startDate) && !insertDate.isAfter(endDate)) {
+                            return Integer.parseInt(setting.getEndHours());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultHour);
+    }
+
+
+    public int returnSettingEndMinute(String id, String name, String insertDataDateStr) {
+        int defaultMinute = 9;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // Expects format "yyyy-MM-dd"
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultMinute;
+        }
+
+        return localSettingRepository.findAllByStatus("1").stream()
+                .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
+                .sorted(Comparator.comparing(LocalSetting::getFormattedBirthDate).reversed())
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
+
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getEndMinute());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultMinute);
+    }
+
+    public int returnSettingStartHour(String id, String name, String insertDataDateStr) {
+        int defaultHour = 9;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // expects format "yyyy-MM-dd"
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultHour;
+        }
+
+        return localSettingRepository.findAllByStatus("1").stream()
+                .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
+                .sorted(Comparator.comparing(LocalSetting::getFormattedBirthDate).reversed())
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
+
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getStartHours());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultHour);
+    }
+
+    public int returnSettingTotalHour(String id, String name, String insertDataDateStr) {
+        int defaultHour = 8;
+
+        LocalDate insertDate;
+        try {
+            insertDate = LocalDate.parse(insertDataDateStr); // expects format "yyyy-MM-dd"
+        } catch (DateTimeParseException e) {
+            e.printStackTrace();
+            return defaultHour;
+        }
+
+        return localSettingRepository.findAllByStatus("1").stream()
+                .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
+                .sorted(Comparator.comparing(LocalSetting::getFormattedBirthDate).reversed())
+                .map(setting -> {
+                    try {
+                        LocalDate start = LocalDate.parse(setting.getFormattedBirthDate());
+                        LocalDate end = LocalDate.parse(setting.getFormattedDeathDate());
+
+                        if (!insertDate.isBefore(start) && !insertDate.isAfter(end)) {
+                            return Integer.parseInt(setting.getTotalHours());
+                        }
+                    } catch (DateTimeParseException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                })
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(defaultHour);
+    }
+
 }

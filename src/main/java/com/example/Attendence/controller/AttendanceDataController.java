@@ -15,9 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -221,8 +219,7 @@ public class AttendanceDataController {
     public ResponseEntity<String> updateAttendanceData(@RequestBody Map<String, List<AttendanceDataForFixedDay>> requestData) {
         List<AttendanceDataForFixedDay> newData = requestData.get("newData"); // Take first element
         List<AttendanceDataForFixedDay> oldData = requestData.get("oldData"); // Take first element
-      //  System.out.println(newData);
-     //   System.out.println(oldData);
+
         return attendanceService.updateAttendanceData(newData, oldData);
     }
 
@@ -234,6 +231,18 @@ public class AttendanceDataController {
         if (amPm.equalsIgnoreCase("PM")) {
             adjustedHour += 12;
         }
-        return LocalDateTime.of(year, month, dayOfMonth, adjustedHour, minute);
+        return convertUtcToDhaka(LocalDateTime.of(year, month, dayOfMonth, adjustedHour, minute));
     }
+
+    public static LocalDateTime convertUtcToDhaka(LocalDateTime utcDateTime) {
+        // Attach UTC zone to the LocalDateTime
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+
+        // Convert to Asia/Dhaka zone
+        ZonedDateTime dhakaZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Dhaka"));
+
+        // Return as LocalDateTime in Asia/Dhaka
+        return dhakaZoned.toLocalDateTime();
+    }
+
 }
