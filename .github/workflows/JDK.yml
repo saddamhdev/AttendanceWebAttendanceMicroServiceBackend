@@ -9,7 +9,7 @@ on:
       deploy:
         description: 'Deploy to server after build?'
         required: false
-        default: 'false'
+        default: 'true'
 
 jobs:
   build:
