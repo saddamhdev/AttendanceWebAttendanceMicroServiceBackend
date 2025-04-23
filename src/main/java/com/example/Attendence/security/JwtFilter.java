@@ -30,16 +30,17 @@ public class JwtFilter extends OncePerRequestFilter {
     public void doFilterInternal(HttpServletRequest request,
                                  HttpServletResponse response,
                                  FilterChain chain) throws ServletException, IOException {
-        //System.out.println("Incoming Request Headers:");
+       // System.out.println("Incoming Request Headers:");
         request.getHeaderNames().asIterator().forEachRemaining(header ->{
 
-            //  System.out.println(header + ": " + request.getHeader(header))
+              //System.out.println(header + ": " + request.getHeader(header))
+              ;
                 }
 
         );
 
         final String authHeader = request.getHeader("Authorization");
-        //System.out.println("Auth Header Received: " + authHeader);
+       // System.out.println("Auth Header Received: " + authHeader);
 
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
           //  System.out.println("Missing or Invalid Token");

@@ -11,6 +11,8 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -22,17 +24,25 @@ public class globalSettingController {
     @Autowired
     private  GlobalSettingRepository globalSettingRepository;
     @PostMapping("/insert")
-    public GlobalSetting insertEmployee(@RequestBody GlobalSetting employeeData) {
+    public ResponseEntity<String> insertEmployee(@RequestBody GlobalSetting employeeData) {
+        try {
+            if (employeeData == null) {
+                return ResponseEntity.badRequest().body("Error: Received null data.");
+            }
 
-       // System.out.println("Received Data: " + employeeData); // Debugging
-        // Save the employee data to the database
-        GlobalSetting globalSetting = globalSettingRepository.save(employeeData);
-        // Return the saved employee data as a response
-        return globalSetting;
+            globalSettingRepository.save(employeeData);
+            return ResponseEntity.ok("Successfully inserted");
+
+        } catch (Exception e) {
+            e.printStackTrace(); // Optional: Log error
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to insert data. Please try again.");
+        }
     }
+
     @PostMapping("/update")
     public ResponseEntity<String> update(@RequestBody Map<String,String> employeeData) {
-       // readCSVForGlobalSetting("C:\\Users\\Saddam\\Downloads/GlobalSetting.csv");
+       //  readCSVForGlobalSetting("C:\\Users\\01957\\Downloads/global.csv");
        // System.out.println("Received Data: " + employeeData); // Debugging
       //  System.out.println("Received Data: " + employeeData.get("currentTime")); // Debugging
         // Save the employee data to the database
@@ -43,7 +53,7 @@ public class globalSettingController {
 
            GlobalSetting data=gg.get();
            data.setStatus("0");
-           globalSettingRepository.save(data);
+          globalSettingRepository.save(data);
            globalSettingRepository.save(new GlobalSetting(
                    employeeData.get("currentTime"),
                    employeeData.get("formattedBirthDate"),
@@ -60,6 +70,29 @@ public class globalSettingController {
 
 
     }
+    @PostMapping("/updateDel")
+    public ResponseEntity<String> updateDel(@RequestBody Map<String,String> employeeData) {
+        //  readCSVForGlobalSetting("C:\\Users\\01957\\Downloads/global.csv");
+        // System.out.println("Received Data: " + employeeData); // Debugging
+        //  System.out.println("Received Data: " + employeeData.get("currentTime")); // Debugging
+        // Save the employee data to the database
+        // GlobalSetting globalSetting = globalSettingRepository.save(employeeData);
+        // Return the saved employee data as a response
+        Optional<GlobalSetting> gg= globalSettingRepository.findById(employeeData.get("rowId"));
+        if(gg.isPresent()){
+
+            GlobalSetting data=gg.get();
+            data.setStatus("2");
+            globalSettingRepository.save(data);
+
+            return ResponseEntity.ok("Successfully deleted");
+        }
+        return ResponseEntity.ok("Sorry Not updated");
+
+
+
+    }
+
     @GetMapping("/getAll")
     public List<GlobalSetting> retrieveData(){
 
@@ -72,6 +105,7 @@ public class globalSettingController {
         Pattern pattern = Pattern.compile(regex);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            br.readLine();
             while ((line = br.readLine()) != null) {
                 List<String> values = new ArrayList<>();
                 Matcher matcher = pattern.matcher(line);
@@ -86,7 +120,7 @@ public class globalSettingController {
 
               //  System.out.println(values.size()+"  "+values); // Print as a list
                 GlobalSetting ee=new GlobalSetting();
-                ee.setCurrentTime(values.get(1));
+                ee.setCurrentTime(convertUtcToDhaka(values.get(1)));
                 ee.setEarlyMinute(values.get(2));
                 ee.setFormattedBirthDate(values.get(3));
                 ee.setFormattedDeathDate(values.get(4));
@@ -107,31 +141,34 @@ public class globalSettingController {
     }
 
 
-    @DeleteMapping("/delete")
-    public ResponseEntity<String> deleteGlobalSetting(@RequestBody GlobalSetting globalSetting) {
-       // System.out.println("Received for deletion: " + globalSetting); // ✅ Log input
+    @DeleteMapping("del/{id}")
+    public ResponseEntity<String> deleteGlobalData(@PathVariable String id) {
+        System.out.println("Received for deletion: " + id); // ✅ Log input
 
         try {
-            if (globalSetting == null) {
-                return ResponseEntity.badRequest().body("Error: Request body is missing!");
-            }
-            if (globalSetting.getCurrentTime() == null) {
-                return ResponseEntity.badRequest().body("Error: currentTimee is missing!");
-            }
 
-            Optional<GlobalSetting> data=globalSettingRepository.findByIdAndStatus(globalSetting.getId(),"1");
+            Optional<GlobalSetting> data=globalSettingRepository.findByIdAndStatus(id,"1");
            if(data.isPresent()){
               GlobalSetting gog=data.get();
-              gog.setStatus("0");
+              gog.setStatus("2");
               globalSettingRepository.save(gog);
 
            }
 
-            return ResponseEntity.ok("Deleted successfully");
+            return ResponseEntity.ok("Successfully deleted");
         } catch (Exception e) {
             e.printStackTrace(); // ✅ Print the full error
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting entry: " + e.getMessage());
         }
     }
+    public static String convertUtcToDhaka(String inputTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime utcDateTime = LocalDateTime.parse(inputTime, inputFormatter);
 
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+        ZonedDateTime dhakaZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Dhaka"));
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dhakaZoned.format(outputFormatter);
+    }
 }

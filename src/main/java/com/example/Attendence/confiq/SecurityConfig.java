@@ -53,7 +53,7 @@ public class SecurityConfig {
 
         } else {
             //System.out.println("local host checking:");
-            return new String[]{"http://localhost:3082"};
+            return new String[]{"http://localhost:3082","http://localhost:3000","http://localhost:3081","http://localhost:3080"};
         }
     }
     @Bean

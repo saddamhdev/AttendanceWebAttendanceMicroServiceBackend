@@ -36,7 +36,7 @@ public class AttendanceDataController {
 
     @PostMapping("/insert")
     public ResponseEntity<?> insertAttendance(@RequestBody List<Map<String, Object>> attendanceList) {
-       // readCSVForAttendanceData("C:\\Users\\Saddam\\Downloads/attendanceData2.csv");
+       // readCSVForAttendanceData("C:\\Users\\01957\\Downloads/attendanceData1.csv");
         try {
             List <AttendanceData> listData=new ArrayList<>();
             for (Map<String, Object> data : attendanceList) {
@@ -85,7 +85,7 @@ public class AttendanceDataController {
 
 
             }
-           attendanceDataRepository.saveAll(listData);
+            attendanceDataRepository.saveAll(listData);
             return ResponseEntity.ok(Collections.singletonMap("message", "Attendance saved successfully"));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -119,26 +119,26 @@ public class AttendanceDataController {
 
                // System.out.println(values.size()+"  "+values); // Print as a list
                 AttendanceData ee=new AttendanceData();
-                ee.setEarlyExitReason(values.get(1));
-                ee.setEmployeeId(values.get(2));
-                ee.setEntryDate(convertDate(values.get(3)));// date 3
+                ee.setEarlyExitReason(values.get(0));
+                ee.setEmployeeId(values.get(1));
+                ee.setEntryDate(convertDate(values.get(2))  );// date 3
                 // ee.setEntryTime(parseDateTime(values.get(3),values.get(4)));
-                ee.setEntryTime(parseDateTime(values.get(4)));
+                ee.setEntryTime( convertUtcToDhaka(parseDateTime(values.get(3))));
                // ee.setExitTime(parseDateTime(values.get(3),values.get(5)));
-                ee.setExitTime(parseDateTime(values.get(5)));
-                ee.setGlobalDayStatus(values.get(6));
-                ee.setLateEntryReason(values.get(7));
-                ee.setMonth(values.get(8));
-                ee.setName(values.get(9));
-                ee.setOuttime(values.get(10));
+                ee.setExitTime(convertUtcToDhaka(parseDateTime(values.get(4))));
+                ee.setGlobalDayStatus(values.get(5));
+                ee.setLateEntryReason(values.get(6));
+                ee.setMonth(values.get(7));
+                ee.setName(values.get(8));
+                ee.setOuttime(values.get(9));
                // ee.setPresentTime(parseDateTime(values.get(3),values.get(11)));
-                ee.setPresentTime(parseDateTime(values.get(11)));
-                ee.setStatus(values.get(12));
-                ee.setUpdateStatus(values.get(13));
-                ee.setYear(values.get(14));
-               // attendanceDataRepository.save(ee);
-              //  System.out.println(ee.toString());
-             //   System.out.println();
+                ee.setPresentTime( convertUtcToDhaka(parseDateTime(values.get(10))));
+                ee.setStatus(values.get(11));
+                ee.setUpdateStatus(values.get(12));
+                ee.setYear(values.get(13));
+                attendanceDataRepository.save(ee);
+                System.out.println(ee.toString());
+                System.out.println();
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -243,6 +243,16 @@ public class AttendanceDataController {
 
         // Return as LocalDateTime in Asia/Dhaka
         return dhakaZoned.toLocalDateTime();
+    }
+    public static String convertUtcToDhaka(String inputTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime utcDateTime = LocalDateTime.parse(inputTime, inputFormatter);
+
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+        ZonedDateTime dhakaZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Dhaka"));
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dhakaZoned.format(outputFormatter);
     }
 
 }

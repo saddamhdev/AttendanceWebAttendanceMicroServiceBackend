@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.*;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,6 +26,8 @@ public class localSettingController {
     private LocalSettingRepository localSettingRepository;
     @PostMapping("/insert")
     public ResponseEntity<String> insertEmployee(@RequestBody LocalSetting employeeData) {
+       // readCSVForLocalSetting("C:\\Users\\01957\\Downloads/local.csv");
+
         try {
             if (employeeData == null) {
                 return ResponseEntity.badRequest().body("Error: Received null data.");
@@ -86,6 +92,7 @@ public class localSettingController {
         Pattern pattern = Pattern.compile(regex);
 
         try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+            br.readLine();
             while ((line = br.readLine()) != null) {
                 List<String> values = new ArrayList<>();
                 Matcher matcher = pattern.matcher(line);
@@ -100,7 +107,7 @@ public class localSettingController {
 
              //   System.out.println(values.size()+"  "+values); // Print as a list
           LocalSetting ee=new LocalSetting();
-          ee.setCurrentTime(values.get(1));
+          ee.setCurrentTime(convertUtcToDhaka(values.get(1)));
           ee.setDesignation(values.get(2));
           ee.setEmployeeId(values.get(3));
           ee.setEndHours(values.get(4));
@@ -121,7 +128,7 @@ public class localSettingController {
     @DeleteMapping("/delete")
     public ResponseEntity<String> deleteLocalSetting(@RequestBody LocalSetting localSetting) {
       //  System.out.println("Received for deletion: " + localSetting); // ✅ Log input
-        //readCSVForLocalSetting("C:\\Users\\Saddam\\Downloads/LocalSetting.csv");
+
         try {
             if (localSetting == null) {
                 return ResponseEntity.badRequest().body("Error: Request body is missing!");
@@ -144,5 +151,14 @@ public class localSettingController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error deleting entry: " + e.getMessage());
         }
     }
+    public static String convertUtcToDhaka(String inputTime) {
+        DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime utcDateTime = LocalDateTime.parse(inputTime, inputFormatter);
 
+        ZonedDateTime utcZoned = utcDateTime.atZone(ZoneId.of("UTC"));
+        ZonedDateTime dhakaZoned = utcZoned.withZoneSameInstant(ZoneId.of("Asia/Dhaka"));
+
+        DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        return dhakaZoned.format(outputFormatter);
+    }
 }
