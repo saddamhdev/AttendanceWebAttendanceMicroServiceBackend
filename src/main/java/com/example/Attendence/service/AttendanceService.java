@@ -157,13 +157,23 @@ public class AttendanceService {
                     if (dateMatch && nameMatch && employeeName.equals(e.getName())) {
                         String date = e.getEntryDate();
 
-                        if (List.of("Absent", "Leave", "Holiday").contains(e.getStatus())) {
-                            resultList.add(new AttendanceDataForAnyPeriod(
-                                    employeeId, employeeName, startDateStr, endDateStr, date,
-                                    "❌", "❌", "❌", "❌", "❌", "❌", "❌", "❌","❌", e.getStatus()
-                            ));
-                            continue;
+                        switch (e.getStatus()) {
+                            case "Leave", "Holiday" -> {
+                                String symbol = "➖";
+                                resultList.add(new AttendanceDataForAnyPeriod(
+                                        employeeId, employeeName, startDateStr, endDateStr, date,
+                                        symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, e.getStatus()
+                                ));
+                            }
+                            case "Absent" -> {
+                                String symbol = "❌";
+                                resultList.add(new AttendanceDataForAnyPeriod(
+                                        employeeId, employeeName, startDateStr, endDateStr, date,
+                                        symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, symbol, e.getStatus()
+                                ));
+                            }
                         }
+
 
                         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
