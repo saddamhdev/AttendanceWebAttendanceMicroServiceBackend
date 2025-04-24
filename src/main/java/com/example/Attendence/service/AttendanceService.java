@@ -42,6 +42,10 @@ public class AttendanceService {
     private AttendanceDataRepository attendanceDataRepository;
 
     public void exportSummaryAttendanceData(List<AttendanceDataForAnyPeriod> dataList, HttpServletResponse response) {
+
+        // Sort dataList by date
+        dataList.sort(Comparator.comparing(AttendanceDataForAnyPeriod::getDate));
+
         Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Employee Data");
 
