@@ -92,7 +92,7 @@ jobs:
               for i in {1..10}; do
                 sleep 2
                 if pgrep -f Attendence.jar > /dev/null; then
-                  echo '✅ Attendence.jar is now running!'
+                  echo '✅ Attendence.jar is now running ok!'
                   date '+🕒 Started at %Y-%m-%d %H:%M:%S'
                   break
                 fi
