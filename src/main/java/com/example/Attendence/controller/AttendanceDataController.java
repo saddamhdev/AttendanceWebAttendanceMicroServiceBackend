@@ -231,7 +231,7 @@ public class AttendanceDataController {
         if (amPm.equalsIgnoreCase("PM")) {
             adjustedHour += 12;
         }
-        return convertUtcToDhaka(LocalDateTime.of(year, month, dayOfMonth, adjustedHour, minute));
+        return (LocalDateTime.of(year, month, dayOfMonth, adjustedHour, minute));
     }
 
     public static LocalDateTime convertUtcToDhaka(LocalDateTime utcDateTime) {
