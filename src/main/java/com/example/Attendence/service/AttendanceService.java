@@ -173,7 +173,7 @@ public class AttendanceService {
                                 ));
                             }
                         }
-
+                        if (!e.getStatus().equals("Leave") & !e.getStatus().equals("Holiday") & !e.getStatus().equals("Absent")) {
 
                         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("hh:mm a");
 
@@ -255,6 +255,7 @@ public class AttendanceService {
                                 dayComment,
                                 e.getStatus()
                         ));
+                      }
                     }
                 }
             }
