@@ -4,7 +4,7 @@ pipeline {
     environment {
         PROD_HOST  = credentials('DO_HOST')
         PROD_USER  = credentials('DO_USER')
-        DEPLOY_DIR = '/www/wwwroot/snvn.deepseahost.com/attendance'
+        DEPLOY_DIR = '/www/wwwroot/CITSNVN/attendance/springbootattendanceservice'
         JAR_NAME   = 'Attendence-1.0.jar'
         PORT       = '3081'
     }
