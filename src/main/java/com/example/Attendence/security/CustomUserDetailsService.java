@@ -33,9 +33,12 @@ public class CustomUserDetailsService implements UserDetailsService {
            if(gg!=null){
 
                List<SimpleGrantedAuthority> authorities = new ArrayList<>();
-               gg.getType().forEach(e->{
-                   authorities.add(new SimpleGrantedAuthority(e));
-               });
+               if(gg.getType() != null && !gg.getType().isEmpty()){
+                   gg.getType().forEach(e->{
+                       authorities.add(new SimpleGrantedAuthority(e));
+                   });
+               }
+              
 
                authorities.add(new SimpleGrantedAuthority("SNVN"));
 

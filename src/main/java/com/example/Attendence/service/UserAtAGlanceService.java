@@ -1208,6 +1208,126 @@ public class UserAtAGlanceService {
 
         return userAtAGlance;
     }
+    public UserAtAGlance getUserAtAGlanceData(String userEmail, String startDate1, String endDate1, String header) {
+        // i have email.. i wll extract rest part
+        employeeList = userService.employeeList(header);
+        Employee employee = employeeList.stream().filter(e -> e.getEmail().equals(userEmail)).findFirst().orElse(null);
+
+        UserAtAGlance userAtAGlance = new UserAtAGlance();
+        userAtAGlance.setEmployeeId(employee.getIdNumber());
+        userAtAGlance.setEmployeeName(employee.getName());
+        userAtAGlance.setStartDate(startDate1);
+        userAtAGlance.setEndDate(endDate1);
+
+        String selectedPerson = employee.getName();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
+        ChronoLocalDate endDate = LocalDate.parse(endDate1, formatter);
+
+        resetCounters();
+
+        List<AttendanceData> dataList = attendanceDataRepository.findByEmployeeIdAndUpdateStatusAndEntryDateInclusive(employee.getIdNumber(), "1", startDate1, endDate1);
+
+        if (!dataList.isEmpty()) {
+            for (AttendanceData e : dataList) {
+                LocalDate entryDate;
+                try {
+                    entryDate = LocalDate.parse(e.getEntryDate(), formatter);
+                } catch (DateTimeParseException ex) {
+                    continue;
+                }
+
+                if (!isDateInRange(entryDate, startDate, endDate) || !selectedPerson.equals(e.getName())) continue;
+
+                for (Employee g : employeeList) {
+                    LocalDate joinDate = LocalDate.parse(g.getJoinDate(), formatter);
+                    if (!g.getName().equals(e.getName()) || joinDate.isAfter(entryDate)) continue;
+
+                    String empId = e.getEmployeeId();
+                    String empName = e.getName();
+                    String entryDay = e.getEntryDate();
+                    LocalTime entryTime = e.getEntryTime().toLocalTime();
+                    LocalTime exitTime = e.getExitTime().toLocalTime();
+
+                    String status = e.getStatus();
+
+                    if (!"Holiday".equals(status)) officedayc++;
+                    if ("Present".equals(status)) {
+                        Duration entryExitDuration = Duration.between(e.getEntryTime(), e.getExitTime());
+                        timeInSecond += entryExitDuration.toHoursPart() * 3600L + entryExitDuration.toMinutesPart() * 60L;
+                        durationc = durationc.plus(entryExitDuration);
+                        presentdayc++;
+
+                        int settingHours = returnSettingTotalHour(empId, empName, entryDay);
+                        if (entryExitDuration.toHours() < settingHours) shorttimec++;
+                        else if (entryExitDuration.toHours() > settingHours || entryExitDuration.toMinutesPart() > 0) extratimec++;
+                        else regulartimec++;
+
+                        LocalTime startThreshold = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnGlobalSettingLateMinute(entryDay) + 1);
+                        if (entryTime.isBefore(startThreshold)) intimec++;
+
+                        LocalTime lateLimit = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnGlobalSettingLateMinute(entryDay));
+                        if (entryTime.isAfter(lateLimit)) {
+                            latetimec++;
+                            LocalTime actualStart = LocalTime.of(returnSettingStartHour(empId, empName, entryDay), returnSettingStartMinute(empId, empName, entryDay));
+                            Duration lateDuration = Duration.between(actualStart, entryTime);
+                            totallatedurationc = totallatedurationc.plus(lateDuration);
+                        }
+
+                        String[] endTimeData = subtractHourMinute(returnSettingEndHour(empId, empName, entryDay), returnGlobalSettingEarlyMinute(entryDay));
+                        LocalTime earlyExitLimit = LocalTime.of(Integer.parseInt(endTimeData[0]), Integer.parseInt(endTimeData[1]));
+                        if (exitTime.isBefore(earlyExitLimit)) earlytimec++;
+
+                        LocalTime actualEnd = LocalTime.of(returnSettingEndHour(empId, empName, entryDay), returnSettingEndMinute(empId, empName, entryDay));
+                        if (exitTime.isAfter(actualEnd)) {
+                            LocalTime extendedEnd = actualEnd.plusMinutes(15);
+                            if (exitTime.isAfter(extendedEnd)) {
+                                Duration extraDuration = Duration.between(actualEnd, exitTime);
+                                totalExtraTime += extraDuration.toHoursPart() * 3600L + extraDuration.toMinutesPart() * 60L;
+                            }
+                        }
+
+                        Matcher matcher = Pattern.compile("(\\d+)\\.(\\d+)").matcher(e.getOuttime());
+                        if (matcher.matches()) {
+                            timeInSecondOfOutTime += Long.parseLong(matcher.group(1)) * 3600L + Long.parseLong(matcher.group(2)) * 60L;
+                        }
+                    }
+
+                    if ("Leave".equals(status)) leavedayc++;
+                    else if ("Absent".equals(status)) absentdayc++;
+                    else if ("Holiday".equals(status)) holydayc++;
+                }
+            }
+
+            userAtAGlance.setOfficeDay(officedayc);
+            userAtAGlance.setTotalPresent(presentdayc);
+
+            intotaltimec = Duration.ofSeconds(timeInSecond);
+            Duration outDuration = Duration.ofSeconds(timeInSecondOfOutTime);
+            userAtAGlance.setOfficeOutTime(outDuration.toHours() + ":" + outDuration.toMinutesPart());
+            totaltimecc = Duration.ofSeconds(timeInSecond + timeInSecondOfOutTime);
+            userAtAGlance.setOfficeInTime(intotaltimec.toHours() + ":" + intotaltimec.toMinutesPart());
+            userAtAGlance.setTotalTime(totaltimecc.toHours() + ":" + totaltimecc.toMinutesPart());
+
+            if (presentdayc != 0) {
+                long averageSeconds = timeInSecond / presentdayc;
+                durationc = Duration.ofSeconds(averageSeconds);
+                totalextradurationc = Duration.ofSeconds(totalExtraTime);
+            }
+
+            userAtAGlance.setAvgTime(durationc.toHoursPart() + ":" + durationc.toMinutesPart());
+            userAtAGlance.setLeave(leavedayc);
+            userAtAGlance.setAbsent(absentdayc);
+            userAtAGlance.setHoliday(holydayc);
+            userAtAGlance.setShortTime(shorttimec);
+            userAtAGlance.setRegularTime(regulartimec);
+            userAtAGlance.setExtraTime(extratimec);
+            userAtAGlance.setEntryInTime(intimec);
+            userAtAGlance.setEntryLate(latetimec);
+        }
+
+        return userAtAGlance;
+    }
 
     // Utility: reset all counters at the start
     private void resetCounters() {
