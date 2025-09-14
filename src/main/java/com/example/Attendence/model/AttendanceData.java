@@ -3,6 +3,7 @@ package com.example.Attendence.model;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Document(collection = "attendanceData") // Updated collection name
@@ -21,7 +22,7 @@ public class AttendanceData { // Renamed class
     private String earlyExitReason;
     private String status;
     private String outtime;
-    private String entryDate;
+    private LocalDate entryDate;
     private String updateStatus;
     private String globalDayStatus;
     private LocalDateTime presentTime;
@@ -34,7 +35,7 @@ public class AttendanceData { // Renamed class
     public AttendanceData(String employeeId, String name, String month, String year,
                           LocalDateTime entryTime, String lateEntryReason,
                           LocalDateTime exitTime, String earlyExitReason,
-                          String status, String outtime, String entryDate,
+                          String status, String outtime, LocalDate entryDate,
                           LocalDateTime presentTime, String updateStatus, String globalDayStatus) { // Updated constructor name
         this.employeeId = employeeId;
         this.name = name;
@@ -142,11 +143,11 @@ public class AttendanceData { // Renamed class
         this.outtime = outtime;
     }
 
-    public String getEntryDate() {
+    public LocalDate getEntryDate() {
         return entryDate;
     }
 
-    public void setEntryDate(String entryDate) {
+    public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
     }
 

@@ -1091,7 +1091,7 @@ public class UserAtAGlanceService {
         }
     }
 
-    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, String startDate1, String endDate1, String header) {
+    public UserAtAGlance getUserAtAGlanceData(String employeeId, String employeeName, LocalDate startDate1, LocalDate endDate1, String header) {
         UserAtAGlance userAtAGlance = new UserAtAGlance();
         userAtAGlance.setEmployeeId(employeeId);
         userAtAGlance.setEmployeeName(employeeName);
@@ -1100,8 +1100,8 @@ public class UserAtAGlanceService {
 
         String selectedPerson = employeeName;
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
-        ChronoLocalDate endDate = LocalDate.parse(endDate1, formatter);
+        ChronoLocalDate startDate = startDate1;
+        ChronoLocalDate endDate =endDate1;
 
         resetCounters();
 
@@ -1112,7 +1112,7 @@ public class UserAtAGlanceService {
             for (AttendanceData e : dataList) {
                 LocalDate entryDate;
                 try {
-                    entryDate = LocalDate.parse(e.getEntryDate(), formatter);
+                    entryDate =e.getEntryDate();
                 } catch (DateTimeParseException ex) {
                     continue;
                 }
@@ -1125,7 +1125,7 @@ public class UserAtAGlanceService {
 
                     String empId = e.getEmployeeId();
                     String empName = e.getName();
-                    String entryDay = e.getEntryDate();
+                    String entryDay = e.getEntryDate().toString();
                     LocalTime entryTime = e.getEntryTime().toLocalTime();
                     LocalTime exitTime = e.getExitTime().toLocalTime();
 
@@ -1208,7 +1208,7 @@ public class UserAtAGlanceService {
 
         return userAtAGlance;
     }
-    public UserAtAGlance getUserAtAGlanceData(String userEmail, String startDate1, String endDate1, String header) {
+    public UserAtAGlance getUserAtAGlanceData(String userEmail, LocalDate startDate1, LocalDate endDate1, String header) {
         // i have email.. i wll extract rest part
         employeeList = userService.employeeList(header);
         Employee employee = employeeList.stream().filter(e -> e.getEmail().equals(userEmail)).findFirst().orElse(null);
@@ -1221,8 +1221,8 @@ public class UserAtAGlanceService {
 
         String selectedPerson = employee.getName();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
-        ChronoLocalDate endDate = LocalDate.parse(endDate1, formatter);
+       // ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
+        //ChronoLocalDate endDate = LocalDate.parse(endDate1, formatter);
 
         resetCounters();
 
@@ -1232,12 +1232,12 @@ public class UserAtAGlanceService {
             for (AttendanceData e : dataList) {
                 LocalDate entryDate;
                 try {
-                    entryDate = LocalDate.parse(e.getEntryDate(), formatter);
+                    entryDate = e.getEntryDate();
                 } catch (DateTimeParseException ex) {
                     continue;
                 }
 
-                if (!isDateInRange(entryDate, startDate, endDate) || !selectedPerson.equals(e.getName())) continue;
+                if (!isDateInRange(entryDate, startDate1, endDate1) || !selectedPerson.equals(e.getName())) continue;
 
                 for (Employee g : employeeList) {
                     LocalDate joinDate = LocalDate.parse(g.getJoinDate(), formatter);
@@ -1245,7 +1245,7 @@ public class UserAtAGlanceService {
 
                     String empId = e.getEmployeeId();
                     String empName = e.getName();
-                    String entryDay = e.getEntryDate();
+                    String entryDay = e.getEntryDate().toString();
                     LocalTime entryTime = e.getEntryTime().toLocalTime();
                     LocalTime exitTime = e.getExitTime().toLocalTime();
 

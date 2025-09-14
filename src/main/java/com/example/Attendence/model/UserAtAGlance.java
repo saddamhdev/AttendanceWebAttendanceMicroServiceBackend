@@ -1,10 +1,12 @@
 package com.example.Attendence.model;
 
+import java.time.LocalDate;
+
 public class UserAtAGlance {
     private String employeeId;
     private  String employeeName;
-    private String startDate;
-    private String endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private int officeDay;
     private int totalPresent;
     private String avgTime;
@@ -27,7 +29,7 @@ public class UserAtAGlance {
     public UserAtAGlance() {
     }
 
-    public UserAtAGlance(String employeeId, String employeeName, String startDate, String endDate, int officeDay, int totalPresent, String avgTime, int leave, int absent, int holiday, int shortTime, int regularTime, int extraTime, int entryInTime, int entryLate, String totalLate, int exitOk, int exitEarly, String totalExtraTime, String officeOutTime, String officeInTime, String totalTime) {
+    public UserAtAGlance(String employeeId, String employeeName, LocalDate startDate, LocalDate endDate, int officeDay, int totalPresent, String avgTime, int leave, int absent, int holiday, int shortTime, int regularTime, int extraTime, int entryInTime, int entryLate, String totalLate, int exitOk, int exitEarly, String totalExtraTime, String officeOutTime, String officeInTime, String totalTime) {
         this.employeeId = employeeId;
         this.employeeName = employeeName;
         this.startDate = startDate;
@@ -68,19 +70,19 @@ public class UserAtAGlance {
         this.employeeName = employeeName;
     }
 
-    public String getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(String startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
-    public String getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(String endDate) {
+    public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
 

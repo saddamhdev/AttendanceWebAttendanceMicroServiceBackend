@@ -1,9 +1,10 @@
 package com.example.Attendence.model;
 
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class AttendanceDataForFixedDay {
-    private String date;
+    private LocalDate date;
     private String employeeId;
     private String name;
     private String startHour;
@@ -20,7 +21,7 @@ public class AttendanceDataForFixedDay {
     private String globalDayStatus;
     private String status;
 
-    public AttendanceDataForFixedDay(String date, String employeeId, String name, String startHour, String startMinute, String lateEntryReason, String startPeriod, String exitHour, String exitMinute, String exitPeriod, String earlyExitReason, String outHour, String outMinute, String updateStatus, String globalDayStatus, String status) {
+    public AttendanceDataForFixedDay(LocalDate date, String employeeId, String name, String startHour, String startMinute, String lateEntryReason, String startPeriod, String exitHour, String exitMinute, String exitPeriod, String earlyExitReason, String outHour, String outMinute, String updateStatus, String globalDayStatus, String status) {
         this.date = date;
         this.employeeId = employeeId;
         this.name = name;
@@ -40,11 +41,11 @@ public class AttendanceDataForFixedDay {
     }
 
     // Getters and Setters
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 

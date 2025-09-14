@@ -44,7 +44,7 @@ public class AttendanceDataController {
                 LocalDate entryDate = LocalDate.parse( data.get("date").toString().trim(), DateTimeFormatter.ofPattern("yyyy-MM-dd"));
                 LocalDate exitDate =  entryDate;
 
-                Optional<AttendanceData> view=attendanceDataRepository.findByEmployeeIdAndEntryDateAndUpdateStatus(data.get("employeeId").toString().trim(),data.get("date").toString().trim(),"1");
+                Optional<AttendanceData> view=attendanceDataRepository.findByEmployeeIdAndEntryDateAndUpdateStatus(data.get("employeeId").toString().trim(),entryDate,"1");
 
                 if(view.isEmpty()){
                     AttendanceData attendanceData=new AttendanceData(
@@ -68,7 +68,7 @@ public class AttendanceDataController {
                             ,
                             data.get("outHour").toString().trim()+"."+ data.get("outMinute").toString().trim()
                             ,
-                            entryDate.toString()
+                            entryDate
                             ,
                             LocalDateTime.now()
                             ,
@@ -148,7 +148,7 @@ public class AttendanceDataController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("M/d/yyyy H:mm", Locale.ENGLISH);
         return LocalDateTime.parse(dateTimeStr, formatter);
     }
-    public static String convertDate(String inputDate) {
+    public static LocalDate convertDate(String inputDate) {
         // Define the input formatter
         DateTimeFormatter inputFormatter = DateTimeFormatter.ofPattern("M/d/yyyy");
         DateTimeFormatter outputFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -160,7 +160,7 @@ public class AttendanceDataController {
         LocalDate transformedDate = LocalDate.of(date.getYear(), date.getMonthValue(), date.getDayOfMonth());
 
         // Format and return as String
-        return transformedDate.format(outputFormatter);
+        return transformedDate;
     }
     public static LocalDateTime parseDateTime(String dateStr, String timeStr) {
        // System.out.println(dateStr+" "+timeStr);
@@ -179,8 +179,8 @@ public class AttendanceDataController {
     }
     @PostMapping("/getAllAttendanceData")
     public List<AllEmployeeAttendanceData> getAttendanceEmployee(@RequestBody Map<String, String> requestData,HttpServletRequest request) {
-        String  startDate = requestData.get("startDate");
-        String endDate = requestData.get("endDate");
+        LocalDate  startDate = LocalDate.parse(requestData.get("startDate"));
+        LocalDate endDate = LocalDate.parse(requestData.get("endDate"));
         return downloadService.getAllEmployeeAttendanceData(startDate, endDate,request.getHeader("Authorization"));
     }
 
@@ -197,7 +197,7 @@ public class AttendanceDataController {
 
     @PostMapping("/getAllAttendanceDataForFixedDay")
     public List<AttendanceDataForFixedDay> getAllAttendanceDataForFixedDay(@RequestBody Map<String, String> requestData,HttpServletRequest request) {
-        String  selectedDate = requestData.get("selectedDate");
+        LocalDate  selectedDate = LocalDate.parse(requestData.get("selectedDate"));
 
         return downloadService.getAllEmployeeAttendanceDataForFixedDay(selectedDate,request.getHeader("Authorization"));
     }

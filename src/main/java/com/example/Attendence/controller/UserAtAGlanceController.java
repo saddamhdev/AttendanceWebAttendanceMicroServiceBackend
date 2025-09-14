@@ -13,6 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +35,11 @@ public class UserAtAGlanceController {
 
         List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatus("1");
 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        return userAtAGlanceService.getUserAtAGlanceData(employeeId, employeeName, startDate, endDate,request.getHeader("Authorization"));
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+        return userAtAGlanceService.getUserAtAGlanceData(employeeId, employeeName, start, end,request.getHeader("Authorization"));
     }
 
     @GetMapping("/getAllSingle")
@@ -44,8 +49,11 @@ public class UserAtAGlanceController {
 
         final String finalToken = token.substring(7);
         String username = JwtGenerator.extractUsername(finalToken);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-        return userAtAGlanceService.getUserAtAGlanceData( username, startDate, endDate,request.getHeader("Authorization"));
+        LocalDate start = LocalDate.parse(startDate, formatter);
+        LocalDate end = LocalDate.parse(endDate, formatter);
+        return userAtAGlanceService.getUserAtAGlanceData( username, start, end,request.getHeader("Authorization"));
     }
 
     @PostMapping("/exportAtAGlanceData")

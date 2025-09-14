@@ -18,10 +18,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.chrono.ChronoLocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -78,9 +75,30 @@ public class DownloadService {
     private AttendanceDataRepository attendanceDataRepository;
 
 
-    public List<AttendanceDataForFixedDay> getAllEmployeeAttendanceDataForFixedDay(String selectedDate,String header){
+    public List<AttendanceDataForFixedDay> getAllEmployeeAttendanceDataForFixedDay(LocalDate selectedDate,String header){
         List <AttendanceDataForFixedDay> resultlist=new ArrayList<>();
-        List<AttendanceData> dataList=attendanceDataRepository.findByEntryDateAndUpdateStatus(selectedDate,"1");
+        System.out.println("Selected date (Dhaka): " + selectedDate);
+
+        // 1. Build UTC query window
+        LocalDateTime startUtc = selectedDate.atStartOfDay().minusHours(6);
+        LocalDateTime endUtc = selectedDate.plusDays(1).atStartOfDay().minusHours(6);
+
+        // 2. Query Mongo in UTC
+        List<AttendanceData> dataList =
+                attendanceDataRepository.findByEntryDateFixedDay(startUtc, endUtc, "1");
+
+        // 3. Shift times back to Dhaka
+        for (AttendanceData data : dataList) {
+            if (data.getEntryTime() != null) {
+                data.setEntryTime(data.getEntryTime().plusHours(6));
+            }
+            if (data.getExitTime() != null) {
+                data.setExitTime(data.getExitTime().plusHours(6));
+            }
+        }
+        // List<AttendanceData> dataList=attendanceDataRepository.findByEntryDateAndUpdateStatus(selectedDate,"1");
+       // System.out.println(dataList);
+        dataList.forEach(System.out::println);
         employeeList=userService.employeeList(header);
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("hh:mm a");
         employeeList.forEach(user->{
@@ -109,12 +127,14 @@ public class DownloadService {
                     );
 
                     resultlist.add(view);
+                   // System.out.println(data);
+                    //System.out.println(view);
 
                 }
 
             });
         });
-
+       // System.out.println(resultlist);
         return resultlist;
 
     }
@@ -231,7 +251,7 @@ public class DownloadService {
         }
     }
 
-    public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(String startDate1, String endDate1,String header){
+    public List<AllEmployeeAttendanceData> getAllEmployeeAttendanceData(LocalDate startDate1, LocalDate endDate1,String header){
 
         List<AllEmployeeAttendanceData> resultList=new ArrayList<>();
        // List<AttendanceData> dataList=attendanceDataRepository.findByUpdateStatusAndEntryDateBetween("1",startDate1,endDate1);
@@ -239,8 +259,8 @@ public class DownloadService {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
         // Convert to ChronoLocalDate
-        ChronoLocalDate startDate = LocalDate.parse(startDate1, formatter);
-        ChronoLocalDate endDate=LocalDate.parse(endDate1, formatter);
+        ChronoLocalDate startDate = (startDate1);
+        ChronoLocalDate endDate=(endDate1);
 
 
             employeeList.parallelStream().forEach(f->{
@@ -267,7 +287,7 @@ public class DownloadService {
                     databaseDate.set(LocalDate.now()); // Initialize with a default value
                     // Convert the string to LocalDate
                     try {
-                        databaseDate.set(LocalDate.parse(e.getEntryDate(), dateFormatter));
+                        databaseDate.set(e.getEntryDate());
                         //System.out.println("Converted LocalDate: " + databaseDate);
                     } catch (DateTimeParseException g) {
                         g.printStackTrace(); // Handle parsing exception
@@ -510,16 +530,10 @@ public class DownloadService {
 
         return result;
     }
-    public int returnGlobalSettingLateMinute(String insertDataDateStr) {
+    public int returnGlobalSettingLateMinute(LocalDate insertDataDateStr) {
         int defaultMinute = 9;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr); // expects format: yyyy-MM-dd
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultMinute;
-        }
+        LocalDate insertDate=insertDataDateStr;
 
         return globalSettingRepository.findAllByStatus("1").stream()
                 .sorted(Comparator.comparing(GlobalSetting::getFormattedBirthDate).reversed()) // reverse for latest first
@@ -571,16 +585,11 @@ public class DownloadService {
                 .orElse(defaultMinute);
     }
 
-    public int returnSettingStartMinute(String id, String name, String insertDataDateStr) {
+    public int returnSettingStartMinute(String id, String name, LocalDate insertDataDateStr) {
         int defaultMinute = 9;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr); // expects "yyyy-MM-dd"
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultMinute;
-        }
+        LocalDate insertDate=insertDataDateStr;
+
 
         return localSettingRepository.findAllByStatus("1").stream()
                 .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
@@ -603,16 +612,10 @@ public class DownloadService {
                 .orElse(defaultMinute);
     }
 
-    public int returnSettingEndHour(String id, String name, String insertDataDateStr) {
+    public int returnSettingEndHour(String id, String name, LocalDate insertDataDateStr) {
         int defaultHour = 17;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr);
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultHour;
-        }
+        LocalDate insertDate=insertDataDateStr;
 
         return localSettingRepository.findAllByStatus("1").stream()
                 .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
@@ -636,16 +639,11 @@ public class DownloadService {
     }
 
 
-    public int returnSettingEndMinute(String id, String name, String insertDataDateStr) {
+    public int returnSettingEndMinute(String id, String name, LocalDate insertDataDateStr) {
         int defaultMinute = 9;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr); // Expects format "yyyy-MM-dd"
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultMinute;
-        }
+        LocalDate insertDate=insertDataDateStr;
+
 
         return localSettingRepository.findAllByStatus("1").stream()
                 .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
@@ -668,16 +666,10 @@ public class DownloadService {
                 .orElse(defaultMinute);
     }
 
-    public int returnSettingStartHour(String id, String name, String insertDataDateStr) {
+    public int returnSettingStartHour(String id, String name, LocalDate insertDataDateStr) {
         int defaultHour = 9;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr); // expects format "yyyy-MM-dd"
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultHour;
-        }
+        LocalDate insertDate=insertDataDateStr;
 
         return localSettingRepository.findAllByStatus("1").stream()
                 .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))
@@ -700,16 +692,11 @@ public class DownloadService {
                 .orElse(defaultHour);
     }
 
-    public int returnSettingTotalHour(String id, String name, String insertDataDateStr) {
+    public int returnSettingTotalHour(String id, String name, LocalDate insertDataDateStr) {
         int defaultHour = 8;
 
-        LocalDate insertDate;
-        try {
-            insertDate = LocalDate.parse(insertDataDateStr); // expects format "yyyy-MM-dd"
-        } catch (DateTimeParseException e) {
-            e.printStackTrace();
-            return defaultHour;
-        }
+        LocalDate insertDate=insertDataDateStr;
+
 
         return localSettingRepository.findAllByStatus("1").stream()
                 .filter(s -> id.equals(s.getEmployeeId()) && name.equals(s.getName()))

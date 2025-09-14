@@ -1,7 +1,10 @@
 package com.example.Attendence.model;
+
+import java.time.LocalDate;
+
 public class AllEmployeeAttendanceData {
-    private  String startDate;
-    private  String endDate;
+    private LocalDate startDate;
+    private  LocalDate endDate;
     // Fields
     private String serial; // serial = index + 1
     private String name; // emp.name
@@ -24,7 +27,7 @@ public class AllEmployeeAttendanceData {
     private String officeInTime;
     private String totalTime;
 
-    public AllEmployeeAttendanceData(String startDate, String endDate, String serial, String name, String officeDay, String totalPresent, String avgTime, String leave, String absent, String holyday, String shortTime, String requiredTime, String extraTime, String entryInTime, String entryLate, String entryTotalLate, String exitOk, String exitEarly, String totalExtraTime, String officeOutTime, String officeInTime, String totalTime) {
+    public AllEmployeeAttendanceData(LocalDate startDate, LocalDate endDate, String serial, String name, String officeDay, String totalPresent, String avgTime, String leave, String absent, String holyday, String shortTime, String requiredTime, String extraTime, String entryInTime, String entryLate, String entryTotalLate, String exitOk, String exitEarly, String totalExtraTime, String officeOutTime, String officeInTime, String totalTime) {
         this.startDate = startDate;
         this.endDate = endDate;
         this.serial = serial;
@@ -49,19 +52,19 @@ public class AllEmployeeAttendanceData {
         this.totalTime = totalTime;
     }
 
-    public String getStartDate() {
+    public LocalDate getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(String startDate) {
+    public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
     }
 
-    public String getEndDate() {
+    public LocalDate getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(String endDate) {
+    public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
 
